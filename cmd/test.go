@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"io/ioutil"
+	"os"
 
 	"github.com/andscoop/ancli/card"
 )
@@ -20,6 +21,13 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Files: ", args)
 		for _, file := range args {
+			info, err := os.Stat(file)
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Println(info.ModTime())
+
 			dat, err := ioutil.ReadFile(file)
 			if err != nil {
 				panic(err)
