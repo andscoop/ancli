@@ -1,9 +1,14 @@
 package card
 
 import (
-	"fmt"
 	"strings"
+	"time"
 )
+
+type File struct {
+	FilePath    string    `json:"FilePath"`
+	LastIndexed time.Time `json:"LastIndexed"`
+}
 
 type Card struct {
 	Fp, Question, Answer string
@@ -36,7 +41,6 @@ func ParseCard(fp string, s []byte) *Card {
 
 		if strings.Trim(line, " ") == "---" {
 			// todo check to make sure '---' is not first line
-			fmt.Println("found line break")
 			card.Question = strings.Join(prevLines, "\n")
 			card.Answer = strings.Join(lines[i+1:], "\n")
 			break

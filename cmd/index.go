@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/andscoop/ancli/indexer"
+	"github.com/andscoop/ancli/card"
 )
 
 func init() {
@@ -16,6 +16,9 @@ var indexCmd = &cobra.Command{
 	Long:  `Refresh the index of your anki cards`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		indexer.Walk(args[0], false)
+		err := card.Walk(args[0], false)
+		if err != nil {
+			panic(err)
+		}
 	},
 }
