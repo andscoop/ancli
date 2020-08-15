@@ -12,6 +12,16 @@ import (
 	"time"
 )
 
+// GetIndex retrieves an Index object
+func GetIndex(indexPath string) (map[string]File, error) {
+	index, err := loadIndex(indexPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return index, nil
+}
+
 func isHidden(osPathname string) bool {
 	fileNodes := strings.Split(osPathname, "/")
 	node := fileNodes[len(fileNodes)-1]
@@ -94,8 +104,12 @@ func loadIndex(fp string) (map[string]File, error) {
 }
 
 func Walk(dirname string, showHidden bool) error {
-	i := make(map[string]File)
-	err := godirwalk.Walk(dirname, &godirwalk.Options{
+	index, err := loadIndex(dirname)
+	if err != nil {
+		return err
+	}
+
+	err = godirwalk.Walk(dirname, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
 			if !showHidden && isHidden(osPathname) {
 				return filepath.SkipDir
@@ -107,10 +121,14 @@ func Walk(dirname string, showHidden bool) error {
 				return err
 			}
 
-			fmt.Println(x)
-			fmt.Println("\n")
+			if f, ok := index[osPathname]; ok {
+				f.LastIndexed = time.Now()
+				index[osPathname] = f
+				return nil
+			}
+
 			if x {
-				i[osPathname] = File{FilePath: osPathname, LastIndexed: time.Now()}
+				index[osPathname] = File{FilePath: osPathname, LastIndexed: time.Now()}
 			}
 
 			return nil
@@ -122,7 +140,7 @@ func Walk(dirname string, showHidden bool) error {
 		return err
 	}
 
-	err = saveIndex(&i)
+	err = saveIndex(&index)
 	if err != nil {
 		return err
 	}
