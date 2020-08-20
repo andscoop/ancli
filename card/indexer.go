@@ -104,8 +104,6 @@ func Walk(dir string, showHidden bool) error {
 		return err
 	}
 
-	c := config.GetConfig()
-	c.Set("decks", index)
-	config.SaveConfig(c)
+	config.SetAndSave("decks", index)
 	return nil
 }
