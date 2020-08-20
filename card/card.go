@@ -6,17 +6,13 @@ import (
 	"strings"
 )
 
+// Card contains the necessary pieces of an Anki Card
 type Card struct {
 	Fp, Question, Answer string
 	HasBlank             bool
 }
 
-func indexStrikethrough(s string) (int, int) {
-	b := strings.Index(s, "~")
-	e := strings.LastIndex(s, "~")
-	return b, e
-}
-
+// ParseCard will break out an Anki card into its necessary parts
 func ParseCard(fp string) (*Card, error) {
 	prevLines := make([]string, 1)
 	remainingLines := make([]string, 1)
@@ -59,4 +55,10 @@ func ParseCard(fp string) (*Card, error) {
 	}
 
 	return &card, nil
+}
+
+func indexStrikethrough(s string) (int, int) {
+	b := strings.Index(s, "~")
+	e := strings.LastIndex(s, "~")
+	return b, e
 }

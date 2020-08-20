@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -65,9 +66,14 @@ func (c cfg) SetAndSave(value string) {
 	SaveConfig(viper.GetViper())
 }
 
-// saveConfig will save the config to a file
+// SaveConfig writes viper config to specified dir
 func SaveConfig(v *viper.Viper) error {
-	err := v.WriteConfigAs(HomeConfigFile)
+	err := os.Mkdir(HomeConfigPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	err = v.WriteConfigAs(HomeConfigFile)
 	if err != nil {
 		return err
 	}
@@ -103,20 +109,6 @@ func Init() {
 
 	viper.AutomaticEnv()
 
-	// If home config does not exist, create it
-	homeConfigExists, _ := Exists(HomeConfigFile)
-	if !homeConfigExists {
-		err := os.Mkdir(HomeConfigPath, 0755)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		err = viper.SafeWriteConfigAs(HomeConfigFile)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
 	for _, cfg := range CFGStrMap {
 		if len(cfg.Default) > 0 {
 			viper.SetDefault(cfg.Path, cfg.Default)
@@ -124,27 +116,12 @@ func Init() {
 	}
 
 	// Read in home config
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Printf("ERROR READING CONFIG")
-		return
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok || strings.HasSuffix(err.Error(), "no such file or directory") {
+			// No config file found.
+			// That's okay we'll save when we save.
+		} else {
+			fmt.Println(err.Error())
+		}
 	}
-}
-
-// Exists returns a boolean indicating if the given path already exists
-func Exists(path string) (bool, error) {
-	if path == "" {
-		return false, nil
-	}
-
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-
-	if !os.IsNotExist(err) {
-		return false, err
-	}
-
-	return false, nil
 }

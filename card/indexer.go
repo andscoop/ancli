@@ -62,14 +62,16 @@ func shouldIndex(fp string) (bool, error) {
 	return false, nil
 }
 
-func Walk(dirname string, showHidden bool) error {
+// Walk takes a stroll through the dir
+// skips hidden files by default
+func Walk(dir string, showHidden bool) error {
 	index, err := config.GetIndex()
 	if err != nil {
 		return err
 	}
 
 	fmt.Println(index)
-	err = godirwalk.Walk(dirname, &godirwalk.Options{
+	err = godirwalk.Walk(dir, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
 			osPathname = strings.ToLower(osPathname)
 
@@ -102,10 +104,6 @@ func Walk(dirname string, showHidden bool) error {
 		return err
 	}
 
-	//err = saveIndex(&index)
-	//if err != nil {
-	//	return err
-	//}
 	c := config.GetConfig()
 	c.Set("decks", index)
 	config.SaveConfig(c)
