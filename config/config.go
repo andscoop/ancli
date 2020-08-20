@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
+
+	homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -45,6 +46,12 @@ type cfgs struct {
 	LastIndexed cfg
 }
 
+type Index struct {
+	FilePath    string
+	LastIndexed string
+	LastTested  string
+}
+
 // Creates a new cfg struct
 func newCfg(path string, dflt string) cfg {
 	cfg := cfg{path, dflt}
@@ -55,21 +62,37 @@ func newCfg(path string, dflt string) cfg {
 // SetHomeString sets a string value in home config
 func (c cfg) SetAndSave(value string) {
 	viper.Set(c.Path, value)
-	saveConfig(viper.GetViper(), HomeConfigFile)
+	SaveConfig(viper.GetViper())
 }
 
 // saveConfig will save the config to a file
-func saveConfig(v *viper.Viper, file string) error {
-	err := v.WriteConfigAs(file)
+func SaveConfig(v *viper.Viper) error {
+	err := v.WriteConfigAs(HomeConfigFile)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// GetConfig gets the viper object for direct manipulation
+func GetConfig() *viper.Viper {
+	return viper.GetViper()
+}
+
 // GetHomeString will return config from home string
 func (c cfg) GetString() string {
 	return viper.GetString(c.Path)
+}
+
+// GetIndex will unmarshal an index object and return
+func GetIndex() (map[string]Index, error) {
+	var i = make(map[string]Index)
+	err := viper.UnmarshalKey("decks", &i)
+	if err != nil {
+		panic(err)
+	}
+	return i, nil
+
 }
 
 // Init viper for config file in home directory
@@ -82,8 +105,6 @@ func Init() {
 
 	// If home config does not exist, create it
 	homeConfigExists, _ := Exists(HomeConfigFile)
-	fmt.Println(HomeConfigFile)
-	fmt.Println(homeConfigExists)
 	if !homeConfigExists {
 		err := os.Mkdir(HomeConfigPath, 0755)
 		if err != nil {

@@ -4,14 +4,7 @@ import (
 	"bufio"
 	"os"
 	"strings"
-	"time"
 )
-
-type File struct {
-	FilePath    string    `json:"FilePath"`
-	LastIndexed time.Time `json:"LastIndexed"`
-	LastTested  time.Time `json:"LastTested"`
-}
 
 type Card struct {
 	Fp, Question, Answer string

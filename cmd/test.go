@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/andscoop/ancli/card"
+	"github.com/andscoop/ancli/config"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -20,7 +21,7 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo make decision about whether or not to re-index
 		// todo reindex
-		index, err := card.GetIndex("/Users/andrew.cooper/go/src/github.com/andscoop/ancli/test.json")
+		index, err := config.GetIndex()
 		if err != nil {
 			panic(err)
 		}

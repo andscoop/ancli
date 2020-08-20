@@ -2,26 +2,15 @@ package card
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"github.com/andscoop/ancli/config"
-	"github.com/karrick/godirwalk"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/andscoop/ancli/config"
+	"github.com/karrick/godirwalk"
 )
-
-// GetIndex retrieves an Index object
-func GetIndex(indexPath string) (map[string]File, error) {
-	index, err := loadIndex(indexPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return index, nil
-}
 
 func isHidden(osPathname string) bool {
 	fileNodes := strings.Split(osPathname, "/")
@@ -44,7 +33,6 @@ func isDir(fp string) bool {
 }
 
 func shouldIndex(fp string) (bool, error) {
-	fmt.Println(fp)
 	// todo temp skip scanning the go binary
 	if fp == "/Users/andrew.cooper/go/src/github.com/andscoop/ancli/ancli" {
 		return false, nil
@@ -62,7 +50,6 @@ func shouldIndex(fp string) (bool, error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
 		if strings.Contains(scanner.Text(), "#ancli") {
 			return true, nil
 		}
@@ -75,43 +62,17 @@ func shouldIndex(fp string) (bool, error) {
 	return false, nil
 }
 
-func saveIndex(index *map[string]File) error {
-	indexData, err := json.Marshal(index)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile("test.json", indexData, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func loadIndex(fp string) (map[string]File, error) {
-	indexBytes, err := ioutil.ReadFile(fp)
-	if err != nil {
-		return nil, err
-	}
-
-	var index = make(map[string]File)
-	err = json.Unmarshal(indexBytes, &index)
-	if err != nil {
-		return nil, err
-	}
-
-	return index, nil
-}
-
 func Walk(dirname string, showHidden bool) error {
-	index, err := loadIndex(dirname)
+	index, err := config.GetIndex()
 	if err != nil {
 		return err
 	}
 
+	fmt.Println(index)
 	err = godirwalk.Walk(dirname, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
+			osPathname = strings.ToLower(osPathname)
+
 			if !showHidden && isHidden(osPathname) {
 				return filepath.SkipDir
 			}
@@ -123,13 +84,13 @@ func Walk(dirname string, showHidden bool) error {
 			}
 
 			if f, ok := index[osPathname]; ok {
-				f.LastIndexed = time.Now()
+				f.LastIndexed = time.Now().String()
 				index[osPathname] = f
 				return nil
 			}
 
 			if x {
-				index[osPathname] = File{FilePath: osPathname, LastIndexed: time.Now()}
+				index[osPathname] = config.Index{FilePath: osPathname, LastIndexed: time.Now().String()}
 			}
 
 			return nil
@@ -141,10 +102,12 @@ func Walk(dirname string, showHidden bool) error {
 		return err
 	}
 
-	err = saveIndex(&index)
-	if err != nil {
-		return err
-	}
-
+	//err = saveIndex(&index)
+	//if err != nil {
+	//	return err
+	//}
+	c := config.GetConfig()
+	c.Set("decks", index)
+	config.SaveConfig(c)
 	return nil
 }
