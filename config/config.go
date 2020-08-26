@@ -34,7 +34,7 @@ var (
 type Index struct {
 	FilePath    string
 	LastIndexed string
-	LastTested  string
+	LastQuizzed string
 }
 
 // Init viper for config file in home directory

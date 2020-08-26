@@ -3,10 +3,11 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"os"
+
 	"github.com/andscoop/ancli/card"
 	"github.com/andscoop/ancli/config"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func init() {
@@ -14,9 +15,9 @@ func init() {
 }
 
 var versionCmd = &cobra.Command{
-	Use:   "test",
-	Short: "Start an ancli test session",
-	Long:  `Starts a new test session where you can job your memory`,
+	Use:   "quiz",
+	Short: "Start an ancli quiz session",
+	Long:  `Starts a new quiz session where you can job your memory`,
 	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		// todo make decision about whether or not to re-index
