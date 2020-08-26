@@ -32,7 +32,7 @@ func isDir(fp string) bool {
 	return info.IsDir()
 }
 
-func shouldIndex(fp string) (bool, error) {
+func shouldIndex(fp, deckPrefix string) (bool, error) {
 	// todo temp skip scanning the go binary
 	if fp == "/Users/andrew.cooper/go/src/github.com/andscoop/ancli/ancli" {
 		return false, nil
@@ -50,7 +50,7 @@ func shouldIndex(fp string) (bool, error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "#ancli") {
+		if strings.Contains(scanner.Text(), deckPrefix) {
 			return true, nil
 		}
 	}
@@ -80,7 +80,8 @@ func Walk(dir string, showHidden bool) error {
 			}
 
 			// todo time cutoff logic is incorrect
-			x, err := shouldIndex(osPathname)
+			deckPrefix := config.GetString("deckPrefix")
+			x, err := shouldIndex(osPathname, deckPrefix)
 			if err != nil {
 				return err
 			}
