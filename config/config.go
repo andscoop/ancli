@@ -47,6 +47,7 @@ func Init() {
 
 	viper.SetDefault("lastIndexed", "1900-01-01T00:00:00.00000-00:00")
 	viper.SetDefault("deckPrefix", "#ancli")
+	viper.SetDefault("cardFileExt", "md")
 
 	// Read in home config
 	if err := viper.ReadInConfig(); err != nil {
