@@ -2,7 +2,6 @@ package card
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,8 +32,10 @@ func isDir(fp string) bool {
 }
 
 func shouldIndex(fp, deckPrefix string) (bool, error) {
-	// todo temp skip scanning the go binary
-	if fp == "/Users/andrew.cooper/go/src/github.com/andscoop/ancli/ancli" {
+	ext := config.GetString("cardFileExt")
+	fpParts := strings.Split(fp, ".")
+
+	if fpParts[len(fpParts)-1] != ext {
 		return false, nil
 	}
 
@@ -70,7 +71,6 @@ func Walk(dir string, showHidden bool) error {
 		return err
 	}
 
-	fmt.Println(index)
 	err = godirwalk.Walk(dir, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
 			osPathname = strings.ToLower(osPathname)
@@ -81,6 +81,7 @@ func Walk(dir string, showHidden bool) error {
 
 			// todo time cutoff logic is incorrect
 			deckPrefix := config.GetString("deckPrefix")
+
 			x, err := shouldIndex(osPathname, deckPrefix)
 			if err != nil {
 				return err
