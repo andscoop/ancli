@@ -50,3 +50,8 @@ func (d *Deck) getNextCard() card.Card {
 	d.Index++
 	return *d.Cards[d.Index]
 }
+
+func (d *Deck) getPrevCard() card.Card {
+	d.Index--
+	return *d.Cards[d.Index]
+}

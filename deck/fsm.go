@@ -65,10 +65,14 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		c.PrintQ()
 		d.State = DisplayQuestion
 	},
+	{CmdBack, DisplayQuestion}: func(d *Deck) {
+		c := d.getPrevCard()
+		c.PrintQ()
+		d.State = DisplayQuestion
+	},
+	{CmdBack, DisplayAnswer}: func(d *Deck) {
+		c := d.getCard()
+		c.PrintQ()
+		d.State = DisplayQuestion
+	},
 }
-
-// tm.Clear()
-// tm.MoveCursor(1, 1)
-// tm.Println(c.Question)
-// tm.Println(c.Answer)
-// tm.Flush()
