@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/andscoop/ancli/config"
 	"github.com/andscoop/ancli/deck"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,11 @@ var versionCmd = &cobra.Command{
 	Long:  `Starts a new quiz session where you can job your memory`,
 	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmds := map[string]string{"d": deck.CmdNext, "a": deck.CmdBack}
+
+		cNext := config.GetString("cmdShortcuts.next")
+		cBack := config.GetString("cmdShortcuts.back")
+
+		cmds := map[string]string{cNext: deck.CmdNext, cBack: deck.CmdBack}
 
 		d := deck.NewDeck()
 		reader := bufio.NewReader(os.Stdin)
