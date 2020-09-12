@@ -8,6 +8,11 @@ import (
 	tm "github.com/buger/goterm"
 )
 
+const (
+	PassOutput = "===========\nPASS"
+	FailOutput = "===========\nFAIL"
+)
+
 // Card contains the necessary pieces of an Anki Card
 type Card struct {
 	Fp, Question, Answer string
@@ -26,6 +31,23 @@ func (c *Card) PrintQ() {
 func (c *Card) PrintA() {
 	tm.MoveCursorUp(1)
 	tm.Println(c.Answer)
+	tm.Flush()
+}
+
+// QuizResult prints the output of a single card quiz
+func (c *Card) QuizResult(pass bool, overwrite bool) {
+	lineCount := 1
+	output := FailOutput
+	if overwrite {
+		lineCount = 3
+	}
+
+	if pass {
+		output = PassOutput
+	}
+
+	tm.MoveCursorUp(lineCount)
+	tm.Println(output)
 	tm.Flush()
 }
 

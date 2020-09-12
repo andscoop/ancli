@@ -24,8 +24,10 @@ var versionCmd = &cobra.Command{
 
 		cNext := config.GetString("cmdShortcuts.next")
 		cBack := config.GetString("cmdShortcuts.back")
+		cPass := config.GetString("cmdShortcuts.pass")
+		cFail := config.GetString("cmdShortcuts.fail")
 
-		cmds := map[string]string{cNext: deck.CmdNext, cBack: deck.CmdBack}
+		cmds := map[string]string{cNext: deck.CmdNext, cBack: deck.CmdBack, cPass: deck.CmdPass, cFail: deck.CmdFail}
 
 		d := deck.NewDeck()
 		reader := bufio.NewReader(os.Stdin)

@@ -48,8 +48,11 @@ func Init() {
 	viper.SetDefault("lastIndexed", "1900-01-01T00:00:00.00000-00:00")
 	viper.SetDefault("deckPrefix", "#ancli")
 	viper.SetDefault("cardFileExt", "md")
+	// wasd default
 	viper.SetDefault("cmdShortcuts.next", "d")
 	viper.SetDefault("cmdShortcuts.back", "a")
+	viper.SetDefault("cmdShortcuts.pass", "w")
+	viper.SetDefault("cmdShortcuts.fail", "s")
 
 	// Read in home config
 	if err := viper.ReadInConfig(); err != nil {
