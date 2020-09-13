@@ -2,11 +2,13 @@ package deck
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/andscoop/ancli/card"
 	"github.com/andscoop/ancli/config"
 	"github.com/karrick/godirwalk"
 )
@@ -66,15 +68,13 @@ func shouldIndex(fp, deckPrefix string) (bool, error) {
 // Walk takes a stroll through the dir
 // skips hidden files by default
 func Walk(dir string, showHidden bool) error {
-	index, err := config.GetIndex()
-	if err != nil {
-		return err
-	}
+	d := NewDeck()
 
-	err = godirwalk.Walk(dir, &godirwalk.Options{
+	err := godirwalk.Walk(dir, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
 			osPathname = strings.ToLower(osPathname)
 
+			fmt.Println(osPathname)
 			if !showHidden && isHidden(osPathname) {
 				return filepath.SkipDir
 			}
@@ -87,14 +87,14 @@ func Walk(dir string, showHidden bool) error {
 				return err
 			}
 
-			if f, ok := index[osPathname]; ok {
-				f.LastIndexed = time.Now().String()
-				index[osPathname] = f
-				return nil
-			}
-
-			if x {
-				index[osPathname] = config.Index{FilePath: osPathname, LastIndexed: time.Now().String()}
+			// Update existing card
+			if c, ok := d.Cards[osPathname]; ok {
+				c.LastIndexed = time.Now().String()
+				d.Cards[osPathname] = c
+			} else {
+				if x {
+					d.Cards[osPathname] = &card.Card{Fp: osPathname, LastIndexed: time.Now().String()}
+				}
 			}
 
 			return nil
@@ -102,10 +102,13 @@ func Walk(dir string, showHidden bool) error {
 		Unsorted: true, // (optional) set true for faster yet non-deterministic enumeration (see godoc)
 	})
 
+	err = d.UpdateKeys()
 	if err != nil {
 		return err
 	}
 
-	config.SetAndSave("decks", index)
+	fmt.Print(d.Cards)
+
+	config.SetAndSave("decks", d.Cards)
 	return nil
 }

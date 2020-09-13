@@ -17,6 +17,8 @@ const (
 type Card struct {
 	Fp, Question, Answer string
 	HasBlank             bool
+	LastIndexed          string
+	LastQuizzed          string
 }
 
 // PrintQ handles the printing of a Question
