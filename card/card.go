@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	PassOutput = "===========\nPASS"
-	FailOutput = "===========\nFAIL"
+	PassOutput = "===========\nPASS\n"
+	FailOutput = "===========\nFAIL\n"
 )
 
 // Card contains the necessary pieces of an Anki Card
