@@ -66,10 +66,6 @@ func (c *Card) UpdateQuizElems() {
 	c.Quiz = q
 }
 
-func scrub(a string) string {
-	return strings.Trim(a, " \n")
-}
-
 func extractQuizElem(fp string) Quiz {
 	scannedLines := make([]string, 1)
 	remainingLines := make([]string, 1)
@@ -87,18 +83,21 @@ func extractQuizElem(fp string) Quiz {
 	for scanner.Scan() {
 		t := scanner.Text()
 
-		b, e := indexStrikethrough(t)
-		if (b == -1) || (e == -1) {
+		// determine if card contains strike through
+		b, e := strings.Index(t, "~"), strings.LastIndex(t, "~")
+
+		if (b == -1) || (e == -1) { // no strike through
 			q.HasBlank = false
 		} else {
 			q.HasBlank = true
-			q.Answer = scrub(t[b+1 : e])
+			// todo add support for multi line answers
+			q.Answer = t[b+1 : e]
 			// replace strikethrough text with underscores
-			q.Question = scrub(strings.Replace(t, t[b:e+1], strings.Repeat("_", e-b), 1))
+			q.Question = strings.Replace(t, t[b:e+1], strings.Repeat("_", e-b), 1)
 			break
 		}
 		if strings.Trim(t, " ") == "---" {
-			q.Question = scrub(strings.Join(scannedLines, "\n"))
+			q.Question = strings.Join(scannedLines, "\n")
 
 			// we know where the question and answer are
 			// fast parse rest of card
@@ -106,18 +105,16 @@ func extractQuizElem(fp string) Quiz {
 				remainingLines = append(remainingLines, scanner.Text())
 			}
 
-			q.Answer = scrub(strings.Join(remainingLines, "\n"))
+			q.Answer = strings.Join(remainingLines, "\n")
 			break
 		}
 
 		scannedLines = append(scannedLines, t)
 	}
 
-	return q
-}
+	// scrub q/a
+	q.Answer = strings.Trim(q.Question, " \n")
+	q.Question = strings.Trim(q.Question, " \n")
 
-func indexStrikethrough(s string) (int, int) {
-	b := strings.Index(s, "~")
-	e := strings.LastIndex(s, "~")
-	return b, e
+	return q
 }
