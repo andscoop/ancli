@@ -31,13 +31,6 @@ var (
 	HomeConfigFile = filepath.Join(HomeConfigPath, ConfigFileNameWithExt)
 )
 
-// Index tracks cards in the fs
-type Index struct {
-	FilePath    string
-	LastIndexed string
-	LastQuizzed string
-}
-
 // Init viper for config file in home directory
 func Init() {
 	viper.SetConfigName(ConfigFileName)
