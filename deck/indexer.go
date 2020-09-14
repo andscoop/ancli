@@ -93,7 +93,7 @@ func Walk(dir string, showHidden bool) error {
 				d.Cards[osPathname] = c
 			} else {
 				if x {
-					d.Cards[osPathname] = &card.Card{Fp: osPathname, LastIndexed: time.Now().String()}
+					d.Cards[osPathname] = card.Card{Fp: osPathname, LastIndexed: time.Now().String()}
 				}
 			}
 

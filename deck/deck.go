@@ -2,12 +2,13 @@ package deck
 
 import (
 	"github.com/andscoop/ancli/card"
+	"github.com/andscoop/ancli/config"
 )
 
 // Deck is a deck of cards to be quizzed
 type Deck struct {
 	// Easy-fetching of any card by fp key
-	Cards map[string]*card.Card
+	Cards map[string]card.Card
 	// Track order of deck and allow for easy sorting
 	Keys []string
 	// Track place in deck
@@ -27,26 +28,16 @@ func (d *Deck) UpdateKeys() error {
 
 // NewDeck creates a new Deck and loads cards
 func NewDeck() *Deck {
-	// index, err := config.GetIndex()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	cs, err := config.GetSavedCards()
+	if err != nil {
+		panic(err)
+	}
 
-	// todo Card and Index should eventually be merged
-	// that will avoid needing to loop the index when loading a deck
-	// https://github.com/spf13/viper#unmarshaling unmardhalling directly to struct should help
-	// but needs tested
-	// var cards map[string]*card.Card
-	// for fp := range index {
-	// 	c, err := card.ParseCard(fp)
-	// 	if err != nil {
-	// 		fmt.Println("Error Parsing ", fp)
-	// 		fmt.Println("Check if file exists")
-	// 	}
+	d := Deck{State: Idle, Index: 0, Cards: cs}
 
-	// 	cards[fp] = c
-	// }
-	return &Deck{State: Idle, Index: 0, Cards: make(map[string]*card.Card)}
+	d.UpdateKeys()
+
+	return &d
 }
 
 func (d *Deck) safeGet(i int) card.Card {
@@ -62,7 +53,12 @@ func (d *Deck) safeGet(i int) card.Card {
 		d.Index = 0
 	}
 
-	return *d.Cards[d.Keys[d.Index]]
+	fp := d.Keys[d.Index]
+	c, _ := d.Cards[fp]
+
+	c.UpdateQuizElems()
+
+	return c
 }
 
 // GetCard is a func
