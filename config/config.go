@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/andscoop/ancli/card"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
@@ -29,13 +30,6 @@ var (
 	// HomeConfigFile is the global config file
 	HomeConfigFile = filepath.Join(HomeConfigPath, ConfigFileNameWithExt)
 )
-
-// Index tracks cards in the fs
-type Index struct {
-	FilePath    string
-	LastIndexed string
-	LastQuizzed string
-}
 
 // Init viper for config file in home directory
 func Init() {
@@ -97,13 +91,14 @@ func GetString(path string) string {
 	return viper.GetString(path)
 }
 
-// GetIndex will unmarshal an index object and return
-func GetIndex() (map[string]Index, error) {
-	var i = make(map[string]Index)
-	err := viper.UnmarshalKey("decks", &i)
+// GetSavedCards will unmarshal an index object and return
+func GetSavedCards() (map[string]card.Card, error) {
+	var cs = make(map[string]card.Card)
+	// todo probably not necessary to pass address of cs?
+	err := viper.UnmarshalKey("decks", &cs)
 	if err != nil {
 		panic(err)
 	}
-	return i, nil
+	return cs, nil
 
 }
