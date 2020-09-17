@@ -40,19 +40,8 @@ func NewDeck() *Deck {
 	return &d
 }
 
-func (d *Deck) safeGet(i int) card.Card {
-	d.Index = d.Index + i
-
-	// no more cards on top of deck, go to end
-	if d.Index < 0 {
-		d.Index = len(d.Cards) - 1
-	}
-
-	// end of deck, go to beginning
-	if d.Index >= len(d.Cards) {
-		d.Index = 0
-	}
-
+// PullCard pulls the current card of the deck
+func (d *Deck) PullCard() card.Card {
 	fp := d.Keys[d.Index]
 	c, _ := d.Cards[fp]
 
@@ -61,16 +50,25 @@ func (d *Deck) safeGet(i int) card.Card {
 	return c
 }
 
-// GetCard is a func
-func (d *Deck) getCard() card.Card {
-	return d.safeGet(0)
+// NextCard shifts deck index up for later pulling
+func (d *Deck) NextCard() {
+	// end of deck, go to beginning
+	if d.Index >= len(d.Cards) {
+		d.Index = 0
+	}
+
+	d.Index = d.Index + 1
 }
 
-// GetNextCard is a func
-func (d *Deck) getNextCard() card.Card {
-	return d.safeGet(1)
+// LastCard shifts deck index down for later pulling
+func (d *Deck) LastCard() {
+	// no more cards on top of deck, go to end
+	if d.Index < 0 {
+		d.Index = len(d.Cards) - 1
+	}
+
+	d.Index = d.Index - 1
 }
 
-func (d *Deck) getPrevCard() card.Card {
-	return d.safeGet(-1)
-}
+// todo implement
+// func (d *Deck) RandCard {}

@@ -49,6 +49,7 @@ func (d *Deck) Exec(cmd string) {
 		fmt.Println("unknown command, try again please")
 	} else {
 		f(d)
+		d.ToScreen()
 	}
 }
 
@@ -56,71 +57,51 @@ func (d *Deck) Exec(cmd string) {
 var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	// Idle state transitions
 	{CmdNext, Idle}: func(d *Deck) {
-		c := d.getCard()
-		c.PrintQ()
 		d.State = DisplayQuestion
 	},
 	// Question state transitions
 	{CmdNext, DisplayQuestion}: func(d *Deck) {
-		c := d.getCard()
-		c.PrintA()
 		d.State = DisplayAnswer
 	},
 	{CmdBack, DisplayQuestion}: func(d *Deck) {
-		c := d.getPrevCard()
-		c.PrintQ()
+		d.LastCard()
 		d.State = DisplayQuestion
 	},
 	// Answer state transitions
 	{CmdNext, DisplayAnswer}: func(d *Deck) {
-		c := d.getNextCard()
-		c.PrintQ()
+		d.NextCard()
 		d.State = DisplayQuestion
 	},
 	{CmdBack, DisplayAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.PrintQ()
 		d.State = DisplayQuestion
 	},
 	{CmdPass, DisplayAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(true, false)
 		d.State = PassAnswer
 	},
 	{CmdFail, DisplayAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(false, false)
 		d.State = FailAnswer
 	},
 	// Pass/Fail state transitions
 	{CmdNext, PassAnswer}: func(d *Deck) {
-		c := d.getNextCard()
-		c.PrintQ()
+		d.LastCard()
 		d.State = DisplayQuestion
 	},
 	{CmdNext, FailAnswer}: func(d *Deck) {
-		c := d.getNextCard()
-		c.PrintQ()
+		d.NextCard()
 		d.State = DisplayQuestion
 	},
 	{CmdFail, PassAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(false, true)
 		d.State = FailAnswer
 	},
 	{CmdPass, FailAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(true, true)
 		d.State = PassAnswer
 	},
 	{CmdBack, PassAnswer}: func(d *Deck) {
-		c := d.getPrevCard()
-		c.PrintQ()
+		d.LastCard()
 		d.State = DisplayQuestion
 	},
 	{CmdBack, FailAnswer}: func(d *Deck) {
-		c := d.getPrevCard()
-		c.PrintQ()
+		d.LastCard()
 		d.State = DisplayQuestion
 	},
 }
