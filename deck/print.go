@@ -12,37 +12,27 @@ const (
 
 // ToScreen handles printing of deck quiz given current state
 func (d *Deck) ToScreen() {
-	var screen string
-	state := d.State
 	c := d.PullCard()
+	screen := c.Quiz.Question
 
 	cNext := config.GetString("cmdShortcuts.next")
 	cBack := config.GetString("cmdShortcuts.back")
 	cPass := config.GetString("cmdShortcuts.pass")
 	cFail := config.GetString("cmdShortcuts.fail")
 
-	switch state {
-	case Idle:
-		return
-	case DisplayQuestion:
-		screen = screen + c.Quiz.Question
+	switch d.State {
 	case DisplayAnswer:
-		screen = screen + c.Quiz.Question
 		screen = screen + "\n" + c.Quiz.Answer
 	case PassAnswer:
-		screen = screen + c.Quiz.Question
 		screen = screen + "\n" + c.Quiz.Answer
 		screen = screen + "\n" + passOutput
 	case FailAnswer:
-		screen = screen + c.Quiz.Question
 		screen = screen + "\n" + c.Quiz.Answer
 		screen = screen + "\n" + failOutput
 	}
 
 	tm.Clear()
-
 	tm.MoveCursor(1, 1)
-
 	tm.Println(screen)
 
 	tm.Printf(
