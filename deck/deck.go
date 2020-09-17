@@ -1,6 +1,8 @@
 package deck
 
 import (
+	"fmt"
+
 	"github.com/andscoop/ancli/card"
 	"github.com/andscoop/ancli/config"
 )
@@ -42,6 +44,8 @@ func NewDeck() *Deck {
 
 // PullCard pulls the current card of the deck
 func (d *Deck) PullCard() card.Card {
+	fmt.Println(d.Index)
+	fmt.Println(len(d.Cards))
 	fp := d.Keys[d.Index]
 	c, _ := d.Cards[fp]
 
@@ -52,22 +56,23 @@ func (d *Deck) PullCard() card.Card {
 
 // NextCard shifts deck index up for later pulling
 func (d *Deck) NextCard() {
+	d.Index = d.Index + 1
+
 	// end of deck, go to beginning
 	if d.Index >= len(d.Cards) {
 		d.Index = 0
 	}
-
-	d.Index = d.Index + 1
 }
 
 // LastCard shifts deck index down for later pulling
 func (d *Deck) LastCard() {
+	d.Index = d.Index - 1
+
 	// no more cards on top of deck, go to end
 	if d.Index < 0 {
 		d.Index = len(d.Cards) - 1
+		return
 	}
-
-	d.Index = d.Index - 1
 }
 
 // todo implement
