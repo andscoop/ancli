@@ -1,10 +1,12 @@
-package card
+package deck
 
 // Card contains the necessary pieces of an Anki Card
 type Card struct {
 	Fp          string
 	LastIndexed string
 	LastQuizzed string
+	LastPassed  string
+	EasyFactor  float32
 	Quiz        Quiz
 }
 

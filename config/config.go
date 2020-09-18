@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/andscoop/ancli/card"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
@@ -47,6 +46,11 @@ func Init() {
 	viper.SetDefault("cmdShortcuts.back", "a")
 	viper.SetDefault("cmdShortcuts.pass", "w")
 	viper.SetDefault("cmdShortcuts.fail", "s")
+	// algo configs
+	viper.SetDefault("intervalInDays", 1)
+	viper.SetDefault("useSM2", false) // if enabled, use 0-5 to calculate EF of cards
+	viper.SetDefault("defaultEasyFactor", 2.5)
+	viper.SetDefault("minEasyFactor", 1.3)
 
 	// Read in home config
 	if err := viper.ReadInConfig(); err != nil {
@@ -91,14 +95,7 @@ func GetString(path string) string {
 	return viper.GetString(path)
 }
 
-// GetSavedCards will unmarshal an index object and return
-func GetSavedCards() (map[string]card.Card, error) {
-	var cs = make(map[string]card.Card)
-	// todo probably not necessary to pass address of cs?
-	err := viper.UnmarshalKey("decks", &cs)
-	if err != nil {
-		panic(err)
-	}
-	return cs, nil
-
+// GetBool will return bool config
+func GetBool(path string) bool {
+	return viper.GetBool(path)
 }

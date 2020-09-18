@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andscoop/ancli/card"
 	"github.com/andscoop/ancli/config"
 	"github.com/karrick/godirwalk"
 )
@@ -93,7 +92,7 @@ func Walk(dir string, showHidden bool) error {
 				d.Cards[osPathname] = c
 			} else {
 				if x {
-					d.Cards[osPathname] = card.Card{Fp: osPathname, LastIndexed: time.Now().String()}
+					d.Cards[osPathname] = Card{Fp: osPathname, LastIndexed: time.Now().String()}
 				}
 			}
 
