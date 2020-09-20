@@ -2,7 +2,6 @@ package deck
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,7 +72,6 @@ func Walk(dir string, showHidden bool) error {
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
 			osPathname = strings.ToLower(osPathname)
 
-			fmt.Println(osPathname)
 			if !showHidden && isHidden(osPathname) {
 				return filepath.SkipDir
 			}
@@ -88,11 +86,11 @@ func Walk(dir string, showHidden bool) error {
 
 			// Update existing card
 			if c, ok := d.Cards[osPathname]; ok {
-				c.LastIndexed = time.Now().String()
+				c.LastIndexed = time.Now().Format(time.RFC3339)
 				d.Cards[osPathname] = c
 			} else {
 				if x {
-					d.Cards[osPathname] = Card{Fp: osPathname, LastIndexed: time.Now().String()}
+					d.Cards[osPathname] = Card{Fp: osPathname, LastIndexed: time.Now().Format(time.RFC3339)}
 				}
 			}
 
@@ -100,13 +98,9 @@ func Walk(dir string, showHidden bool) error {
 		},
 		Unsorted: true, // (optional) set true for faster yet non-deterministic enumeration (see godoc)
 	})
-
-	err = d.UpdateKeys()
 	if err != nil {
 		return err
 	}
-
-	fmt.Print(d.Cards)
 
 	config.SetAndSave("decks", d.Cards)
 	return nil

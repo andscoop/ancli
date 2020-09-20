@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/andscoop/ancli/config"
@@ -21,31 +22,49 @@ var versionCmd = &cobra.Command{
 	Long:  `Starts a new quiz session where you can job your memory`,
 	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		cNext := config.GetString("cmdShortcuts.next")
 		cBack := config.GetString("cmdShortcuts.back")
 		cPass := config.GetString("cmdShortcuts.pass")
 		cFail := config.GetString("cmdShortcuts.fail")
 
-		cmds := map[string]string{cNext: deck.CmdNext, cBack: deck.CmdBack, cPass: deck.CmdPass, cFail: deck.CmdFail}
-
 		d := deck.NewDeck()
 		reader := bufio.NewReader(os.Stdin)
 
+		// kick it out of idle state
 		d.Exec(deck.CmdNext)
 
 		for {
+			fsmCmd := "unknown"
+
 			// read command from stdin
-			c, err := reader.ReadString('\n')
+			rawInput, err := reader.ReadString('\n')
 			if err != nil {
 				log.Fatalln(err)
 			}
 
-			cmd, ok := cmds[strings.Trim(c, " \n")]
-			if !ok {
-				cmd = "unknown"
+			scrubbedInput := strings.Trim(rawInput, " \n")
+
+			switch scrubbedInput {
+			case cNext:
+				fsmCmd = deck.CmdNext
+			case cBack:
+				fsmCmd = deck.CmdBack
+			case cPass:
+				fsmCmd = deck.CmdScore
+				d.LastScoreSubmitted = 1
+			case cFail:
+				fsmCmd = deck.CmdScore
+				d.LastScoreSubmitted = 0
+			default:
+				// attempt to convert to int
+				value, err := strconv.ParseInt(scrubbedInput, 0, 64)
+				if err == nil {
+					fsmCmd = deck.CmdScore
+					d.LastScoreSubmitted = value
+				}
 			}
-			d.Exec(cmd)
+
+			d.Exec(fsmCmd)
 		}
 	},
 }
