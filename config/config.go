@@ -48,7 +48,7 @@ func Init() {
 	viper.SetDefault("cmdShortcuts.fail", "s")
 	// algo configs
 	viper.SetDefault("intervalInDays", 1)
-	viper.SetDefault("useSM2", false) // if enabled, use 0-5 to calculate EF of cards
+	viper.SetDefault("quizAlgo", "simple") // if enabled, use 0-5 to calculate EF of cards
 	viper.SetDefault("defaultEasyFactor", 2.5)
 	viper.SetDefault("minEasyFactor", 1.3)
 
@@ -93,6 +93,11 @@ func Save() error {
 // GetString will return config from home string
 func GetString(path string) string {
 	return viper.GetString(path)
+}
+
+// GetFloat will return config from home string
+func GetFloat(path string) float64 {
+	return viper.GetFloat64(path)
 }
 
 // GetBool will return bool config
