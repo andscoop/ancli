@@ -33,6 +33,7 @@ type Deck struct {
 	index              int
 	shouldQuiz         shouldQuizFunc
 	LastScoreSubmitted int64
+	quizAlgo           string
 }
 
 // Card holds all data relating to the actual quizzing.
@@ -63,17 +64,20 @@ type Quiz struct {
 // loads Cards from config or args passed via flags.
 func NewDeck() *Deck {
 	var cs = make(map[string]*Card)
-	c := config.GetConfig()
 
+	quizAlgo := config.GetString("quizAlgo")
+
+	c := config.GetConfig()
 	err := c.UnmarshalKey("decks", &cs)
 	if err != nil {
 		panic(err)
 	}
 
 	d := Deck{
-		state: Idle,
-		index: 0,
-		Cards: cs,
+		state:    Idle,
+		index:    0,
+		Cards:    cs,
+		quizAlgo: quizAlgo,
 		// Score: ScoreSimple,
 	}
 
@@ -171,7 +175,7 @@ func (c *Card) getEF() float64 {
 // syncQuizzableCards adds quizzable cards to Deck.Keys
 // a card is quizzable if it ShouldQuiz()
 func (d *Deck) syncQuizzableCards() error {
-	shouldQuiz := shouldQuizFuncs[config.GetString("quizAlgo")]
+	shouldQuiz := shouldQuizFuncs[d.quizAlgo]
 
 	for k, c := range d.Cards {
 		if shouldQuiz(c) {
@@ -184,7 +188,6 @@ func (d *Deck) syncQuizzableCards() error {
 
 // SubmitCardAnswer will update any algo specific components for a card
 func (d *Deck) SubmitCardAnswer() error {
-	quizAlgo := config.GetString("quizAlgo")
 	score := d.LastScoreSubmitted
 	c, err := d.PullCard()
 	if err != nil {
@@ -196,7 +199,7 @@ func (d *Deck) SubmitCardAnswer() error {
 	c.Reptitions++
 
 	// handle algo specific fields
-	switch quizAlgo {
+	switch d.quizAlgo {
 	case "sm2":
 		ef := c.EasyFactor
 		c.EasyFactor = ef + (.1 - (float64(5)-float64(score))*(.08+(float64(5)-float64(score))*.02))
