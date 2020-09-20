@@ -2,6 +2,7 @@ package deck
 
 import (
 	"bufio"
+	"fmt"
 	"math"
 	"math/rand"
 	"os"
@@ -26,7 +27,7 @@ const (
 // In order to simplify iterating through a deck and sorting
 // Deck uses both a map (Cards) and a slice (Keys).
 type Deck struct {
-	Cards              map[string]Card // fetching of any card by fp key
+	Cards              map[string]*Card // fetching of any card by fp key
 	state              State
 	keys               []string
 	index              int
@@ -61,7 +62,7 @@ type Quiz struct {
 // NewDeck creates a new Deck w/ defaults and
 // loads Cards from config or args passed via flags.
 func NewDeck() *Deck {
-	var cs = make(map[string]Card)
+	var cs = make(map[string]*Card)
 	c := config.GetConfig()
 
 	err := c.UnmarshalKey("decks", &cs)
@@ -133,10 +134,7 @@ func shouldQuizSM2(c *Card) bool {
 	default:
 		// todo double check conversion and cleanup
 		calc := float64(reps-1) * ef
-		expectedIntervalHours := math.Ceil(
-			calc,
-		)
-
+		expectedIntervalHours := math.Ceil(calc)
 		expectedIntervalDays := (time.Duration(expectedIntervalHours) * time.Hour) / 24
 
 		if (since / 24 * time.Hour) >= expectedIntervalDays {
@@ -176,7 +174,7 @@ func (d *Deck) syncQuizzableCards() error {
 	shouldQuiz := shouldQuizFuncs[config.GetString("quizAlgo")]
 
 	for k, c := range d.Cards {
-		if shouldQuiz(&c) {
+		if shouldQuiz(c) {
 			d.keys = append(d.keys, k)
 		}
 	}
@@ -184,7 +182,7 @@ func (d *Deck) syncQuizzableCards() error {
 	return nil
 }
 
-// SubmitCardAnswer
+// SubmitCardAnswer will update any algo specific components for a card
 func (d *Deck) SubmitCardAnswer() error {
 	quizAlgo := config.GetString("quizAlgo")
 	score := d.LastScoreSubmitted
@@ -210,6 +208,9 @@ func (d *Deck) SubmitCardAnswer() error {
 		}
 	}
 
+	fmt.Printf("reptitions on card: %s", string(c.Reptitions))
+	config.SetAndSave("decks", d.Cards)
+
 	return nil
 }
 
@@ -223,7 +224,7 @@ func (d *Deck) PullCard() (*Card, error) {
 		return nil, err
 	}
 
-	return &c, nil
+	return c, nil
 }
 
 // NextCard shifts deck index up for later pulling
