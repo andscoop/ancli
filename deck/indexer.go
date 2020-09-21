@@ -63,34 +63,43 @@ func shouldIndex(fp, deckPrefix string) (bool, error) {
 	return false, nil
 }
 
-// Walk takes a stroll through the dir
-// skips hidden files by default
-func Walk(dir string, showHidden bool) error {
-	d := NewDeck()
+// IndexAndSave TODO
+func (d *Deck) IndexAndSave(indexHidden bool) error {
+	err := d.Index(indexHidden)
+	if err != nil {
+		return err
+	}
 
-	err := godirwalk.Walk(dir, &godirwalk.Options{
+	// todo this probably doesn't work
+	config.SetAndSave("decks."+d.Name, d)
+
+	return nil
+}
+
+// Index TODO
+func (d *Deck) Index(indexHidden bool) error {
+	cards := make(map[string]*Card)
+	err := godirwalk.Walk(d.RootDir, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
+
 			osPathname = strings.ToLower(osPathname)
 
-			if !showHidden && isHidden(osPathname) {
+			if !indexHidden && isHidden(osPathname) {
 				return filepath.SkipDir
 			}
 
-			// todo time cutoff logic is incorrect
-			deckPrefix := config.GetString("deckPrefix")
-
-			x, err := shouldIndex(osPathname, deckPrefix)
+			x, err := shouldIndex(osPathname, d.DeckPrefix)
 			if err != nil {
 				return err
 			}
 
-			// Update existing card
-			if c, ok := d.Cards[osPathname]; ok {
+			// Update existing cards
+			if c, ok := cards[osPathname]; ok {
 				c.LastIndexed = time.Now().Format(time.RFC3339)
-				d.Cards[osPathname] = c
+				cards[osPathname] = c
 			} else {
 				if x {
-					d.Cards[osPathname] = &Card{Fp: osPathname, LastIndexed: time.Now().Format(time.RFC3339)}
+					cards[osPathname] = &Card{Fp: osPathname, LastIndexed: time.Now().Format(time.RFC3339)}
 				}
 			}
 
@@ -98,10 +107,11 @@ func Walk(dir string, showHidden bool) error {
 		},
 		Unsorted: true, // (optional) set true for faster yet non-deterministic enumeration (see godoc)
 	})
+
+	d.Cards = cards
 	if err != nil {
 		return err
 	}
 
-	config.SetAndSave("decks", d.Cards)
 	return nil
 }

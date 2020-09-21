@@ -38,8 +38,6 @@ func Init() {
 
 	viper.AutomaticEnv()
 
-	viper.SetDefault("lastIndexed", "1900-01-01T00:00:00.00000-00:00")
-	viper.SetDefault("deckPrefix", "#ancli")
 	viper.SetDefault("cardFileExt", "md")
 	// wasd default
 	viper.SetDefault("cmdShortcuts.next", "d")
@@ -47,8 +45,7 @@ func Init() {
 	viper.SetDefault("cmdShortcuts.pass", "w")
 	viper.SetDefault("cmdShortcuts.fail", "s")
 	// algo configs
-	viper.SetDefault("intervalInDays", 1)
-	viper.SetDefault("quizAlgo", "simple") // if enabled, use 0-5 to calculate EF of cards
+	viper.SetDefault("defaultAlgo", "sm2")
 	viper.SetDefault("defaultEasyFactor", 2.5)
 	viper.SetDefault("minEasyFactor", 1.3)
 
