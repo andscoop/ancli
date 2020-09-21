@@ -6,7 +6,6 @@ import (
 
 	"github.com/andscoop/ancli/config"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -30,9 +29,5 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(config.Init)
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
 	rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
-	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
-
 }
