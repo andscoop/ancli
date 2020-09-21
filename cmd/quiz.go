@@ -13,21 +13,22 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(quizCmd)
 }
 
-var versionCmd = &cobra.Command{
+var quizCmd = &cobra.Command{
 	Use:   "quiz",
 	Short: "Start an ancli quiz session",
 	Long:  `Starts a new quiz session where you can job your memory`,
-	Args:  cobra.ArbitraryArgs,
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cNext := config.GetString("cmdShortcuts.next")
 		cBack := config.GetString("cmdShortcuts.back")
 		cPass := config.GetString("cmdShortcuts.pass")
 		cFail := config.GetString("cmdShortcuts.fail")
 
-		d := deck.NewDeck()
+		d := deck.LoadDeck(args[0])
+
 		reader := bufio.NewReader(os.Stdin)
 
 		// kick it out of idle state
