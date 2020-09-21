@@ -12,6 +12,7 @@ import (
 
 var rootPathFlag string
 var includeHiddenFlag bool
+var deckAlgoFlag string
 
 func init() {
 	rootCmd.AddCommand(decksCmd)
@@ -21,8 +22,12 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	quizAlgo := config.GetString("defaultAlgo")
+
 	decksCreateCmd.Flags().StringVarP(&rootPathFlag, "filepath", "f", pwd, "filepath to index for deck")
 	decksCreateCmd.Flags().BoolVarP(&includeHiddenFlag, "include-hidden", "h", false, "maybe include hidden files")
+	decksCreateCmd.Flags().StringVarP(&deckAlgoFlag, "algo", "a", quizAlgo, "reptition algo to use for the deck")
 }
 
 var decksCmd = &cobra.Command{
@@ -54,12 +59,11 @@ var decksCreateCmd = &cobra.Command{
 	Long:  `Create a new deck`,
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		quizAlgo := config.GetString("defaultAlgo")
 		d := deck.Deck{
 			Name:       args[0],
 			DeckPrefix: args[1],
 			RootDir:    rootPathFlag,
-			QuizAlgo:   quizAlgo,
+			QuizAlgo:   deckAlgoFlag,
 		}
 
 		err := d.IndexAndSave(includeHiddenFlag)
@@ -68,16 +72,3 @@ var decksCreateCmd = &cobra.Command{
 		}
 	},
 }
-
-// var deckDeleteCmd = &cobra.Command{
-// 	Use:   "deck delete",
-// 	Short: "Refresh the index of your anki cards",
-// 	Long:  `Refresh the index of your anki cards`,
-// 	Args:  cobra.ExactArgs(1),
-// 	Run: func(cmd *cobra.Command, args []string) {
-// 		err := deck.Walk(args[0], false)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 	},
-// }
