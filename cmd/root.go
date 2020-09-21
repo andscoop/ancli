@@ -12,8 +12,8 @@ import (
 var (
 	rootCmd = &cobra.Command{
 		Use:   "ancli",
-		Short: "anCLI is a command line interface for reptition based learning",
-		Long:  "A CLI for reptition based learning",
+		Short: "anCLI is a command line interface for repetition based learning",
+		Long:  "A CLI for repeition based learning",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("welcome to ancli")
 		},

@@ -2,7 +2,6 @@ package deck
 
 import (
 	"bufio"
-	"fmt"
 	"math"
 	"math/rand"
 	"os"
@@ -78,7 +77,6 @@ func NewDeck() *Deck {
 		index:    0,
 		Cards:    cs,
 		quizAlgo: quizAlgo,
-		// Score: ScoreSimple,
 	}
 
 	d.syncQuizzableCards()
@@ -201,8 +199,14 @@ func (d *Deck) SubmitCardAnswer() error {
 	// handle algo specific fields
 	switch d.quizAlgo {
 	case "sm2":
+		minEF := config.GetFloat("minEasyFactor")
 		ef := c.EasyFactor
-		c.EasyFactor = ef + (.1 - (float64(5)-float64(score))*(.08+(float64(5)-float64(score))*.02))
+		ef = ef + (.1 - (float64(5)-float64(score))*(.08+(float64(5)-float64(score))*.02))
+		if ef < minEF {
+			ef = minEF
+		}
+
+		c.EasyFactor = ef
 	case "fib":
 		if score == 0 {
 			c.FibIteration--
@@ -211,7 +215,6 @@ func (d *Deck) SubmitCardAnswer() error {
 		}
 	}
 
-	fmt.Printf("reptitions on card: %s", string(c.Reptitions))
 	config.SetAndSave("decks", d.Cards)
 
 	return nil
