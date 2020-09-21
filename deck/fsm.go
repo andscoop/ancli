@@ -15,10 +15,12 @@ const (
 	DisplayQuestion
 	// DisplayAnswer until user commands otherwise
 	DisplayAnswer
-	// PassAnswer lets the user know they passed the quiz
-	PassAnswer
-	// FailAnswer lets the user know they failed the quiz
-	FailAnswer
+	// ScoreAnswer updates score factors and tells user quizoutcome
+	ScoreAnswer
+	// // PassAnswer lets the user know they passed the quiz
+	// PassAnswer
+	// // FailAnswer lets the user know they failed the quiz
+	// FailAnswer
 )
 
 const (
@@ -26,10 +28,8 @@ const (
 	CmdNext = "next"
 	// CmdBack execs a "prev" transition
 	CmdBack = "back"
-	// CmdPass marks an card quiz answer as correct
-	CmdPass = "pass"
-	// CmdFail marks an card quiz answer as incorrect
-	CmdFail = "fail"
+	// CmdScore marks an card quiz answer as correct
+	CmdScore = "score"
 )
 
 // CmdStateTupple tupple for state-command combination
@@ -44,83 +44,53 @@ type TransitionFunc func(deck *Deck)
 // Exec will attempt to transition the state machine
 func (d *Deck) Exec(cmd string) {
 	// get function from transition table
-	tupple := CmdStateTupple{strings.TrimSpace(cmd), d.State}
+
+	tupple := CmdStateTupple{strings.TrimSpace(cmd), d.state}
 	if f := StateTransitionTable[tupple]; f == nil {
 		fmt.Println("unknown command, try again please")
 	} else {
 		f(d)
+		d.ToScreen()
 	}
 }
 
 // StateTransitionTable transition table
 var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
-	// Idle state transitions
+	// Transitions from Idle
 	{CmdNext, Idle}: func(d *Deck) {
-		c := d.getCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
+		d.state = DisplayQuestion
 	},
-	// Question state transitions
+	// Transitions from DisplayQuestion
 	{CmdNext, DisplayQuestion}: func(d *Deck) {
-		c := d.getCard()
-		c.PrintA()
-		d.State = DisplayAnswer
+		d.state = DisplayAnswer
 	},
 	{CmdBack, DisplayQuestion}: func(d *Deck) {
-		c := d.getPrevCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
+		d.LastCard()
+		d.state = DisplayQuestion
 	},
-	// Answer state transitions
+	// Transitions from DisplayAnswer
 	{CmdNext, DisplayAnswer}: func(d *Deck) {
-		c := d.getNextCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
+		d.NextCard()
+		d.state = DisplayQuestion
 	},
 	{CmdBack, DisplayAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
+		d.state = DisplayQuestion
 	},
-	{CmdPass, DisplayAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(true, false)
-		d.State = PassAnswer
+	{CmdScore, DisplayAnswer}: func(d *Deck) {
+		d.SubmitCardAnswer()
+		d.state = ScoreAnswer
 	},
-	{CmdFail, DisplayAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(false, false)
-		d.State = FailAnswer
+	// Transitions from ScoreAnswer
+	{CmdNext, ScoreAnswer}: func(d *Deck) {
+		d.NextCard()
+		d.state = DisplayQuestion
 	},
-	// Pass/Fail state transitions
-	{CmdNext, PassAnswer}: func(d *Deck) {
-		c := d.getNextCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
+	{CmdScore, ScoreAnswer}: func(d *Deck) {
+		d.SubmitCardAnswer()
+		d.state = ScoreAnswer
 	},
-	{CmdNext, FailAnswer}: func(d *Deck) {
-		c := d.getNextCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
-	},
-	{CmdFail, PassAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(false, true)
-		d.State = FailAnswer
-	},
-	{CmdPass, FailAnswer}: func(d *Deck) {
-		c := d.getCard()
-		c.QuizResult(true, true)
-		d.State = PassAnswer
-	},
-	{CmdBack, PassAnswer}: func(d *Deck) {
-		c := d.getPrevCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
-	},
-	{CmdBack, FailAnswer}: func(d *Deck) {
-		c := d.getPrevCard()
-		c.PrintQ()
-		d.State = DisplayQuestion
+	{CmdBack, ScoreAnswer}: func(d *Deck) {
+		d.LastCard()
+		d.state = DisplayQuestion
 	},
 }
