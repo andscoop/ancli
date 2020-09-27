@@ -2,6 +2,7 @@ package deck
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -63,14 +64,13 @@ func shouldIndex(fp, deckPrefix string) (bool, error) {
 	return false, nil
 }
 
-// IndexAndSave TODO
+// IndexAndSave rebuilds the deck index and saves it to a file
 func (d *Deck) IndexAndSave(indexHidden bool) error {
 	err := d.Index(indexHidden)
 	if err != nil {
 		return err
 	}
 
-	// todo this probably doesn't work
 	config.SetAndSave("decks."+d.Name, d)
 
 	return nil
@@ -81,8 +81,8 @@ func (d *Deck) Index(indexHidden bool) error {
 	cards := make(map[string]*Card)
 	err := godirwalk.Walk(d.RootDir, &godirwalk.Options{
 		Callback: func(osPathname string, de *godirwalk.Dirent) error {
-
 			osPathname = strings.ToLower(osPathname)
+			fpHash := hashFp(osPathname)
 
 			if !indexHidden && isHidden(osPathname) {
 				return filepath.SkipDir
@@ -93,13 +93,15 @@ func (d *Deck) Index(indexHidden bool) error {
 				return err
 			}
 
+			fmt.Printf("Found: %s, WillIndex: %t \n", osPathname, x)
+
 			// Update existing cards
-			if c, ok := cards[osPathname]; ok {
+			if c, ok := cards[fpHash]; ok {
 				c.LastIndexed = time.Now().Format(time.RFC3339)
-				cards[osPathname] = c
+				cards[fpHash] = c
 			} else {
 				if x {
-					cards[osPathname] = &Card{Fp: osPathname, LastIndexed: time.Now().Format(time.RFC3339)}
+					cards[fpHash] = &Card{Fp: osPathname, LastIndexed: time.Now().Format(time.RFC3339)}
 				}
 			}
 

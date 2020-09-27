@@ -2,6 +2,8 @@ package deck
 
 import (
 	"bufio"
+	"crypto/md5"
+	"fmt"
 	"math"
 	"math/rand"
 	"os"
@@ -173,10 +175,23 @@ func (c *Card) getEF() float64 {
 	return ef
 }
 
+// getQuizAlgo fetches set quizAlgo, falls back to global default
+func (d *Deck) getQuizAlgo() string {
+	dqa := d.QuizAlgo
+
+	if len(dqa) == 0 {
+		dqa = config.GetString("defaultAlgo")
+	}
+
+	return dqa
+}
+
 // syncQuizzableCards adds quizzable cards to Deck.Keys
 // a card is quizzable if it ShouldQuiz()
 func (d *Deck) syncQuizzableCards() error {
-	shouldQuiz := shouldQuizFuncs[d.QuizAlgo]
+	dqa := d.getQuizAlgo()
+
+	shouldQuiz := shouldQuizFuncs[dqa]
 
 	for k, c := range d.Cards {
 		if shouldQuiz(c) {
@@ -225,8 +240,8 @@ func (d *Deck) SubmitCardAnswer() error {
 
 // PullCard pulls the current card of the deck
 func (d *Deck) PullCard() (*Card, error) {
-	fp := d.keys[d.index]
-	c, _ := d.Cards[fp]
+	k := d.keys[d.index]
+	c, _ := d.Cards[k]
 
 	err := c.parseQuiz()
 	if err != nil {
@@ -321,6 +336,11 @@ func scrub(a string) string {
 	return strings.Trim(a, " \n")
 }
 
+func hashFp(fp string) string {
+	data := []byte(fp)
+	return fmt.Sprintf("%x", md5.Sum(data))
+}
+
 // ToScreen handles printing of deck quiz given current state
 func (d *Deck) ToScreen() error {
 	c, err := d.PullCard()
@@ -336,13 +356,13 @@ func (d *Deck) ToScreen() error {
 
 	switch d.state {
 	case DisplayAnswer:
-		screen = screen + "\n" + c.quiz.Answer
+		screen = screen + "\n\n" + c.quiz.Answer
 	case ScoreAnswer:
-		screen = screen + "\n" + c.quiz.Answer
+		screen = screen + "\n\n" + c.quiz.Answer
 		if d.LastScoreSubmitted == 0 {
-			screen = screen + "\n" + failOutput
+			screen = screen + "\n\n" + failOutput
 		} else {
-			screen = screen + "\n" + passOutput
+			screen = screen + "\n\n" + passOutput
 		}
 	}
 
@@ -353,9 +373,15 @@ func (d *Deck) ToScreen() error {
 	tm.Println(screen)
 
 	tm.Printf(
-		"\n\nnext (%s)  back (%s)  pass(%s)  fail(%s)\n",
+		"\n\nnext (%s)  back (%s)  pass (%s)  fail (%s)\n",
 		cNext, cBack, cPass, cFail,
 	)
+
+	tm.Printf(
+		"Path: %s\n", c.Fp,
+	)
+
+	tm.Print(">")
 
 	tm.Flush()
 
