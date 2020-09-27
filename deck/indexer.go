@@ -76,7 +76,7 @@ func (d *Deck) IndexAndSave(indexHidden bool) error {
 	return nil
 }
 
-// Index TODO
+// Index walks a directory looking for cards to add to a deck
 func (d *Deck) Index(indexHidden bool) error {
 	cards := make(map[string]*Card)
 	err := godirwalk.Walk(d.RootDir, &godirwalk.Options{
@@ -92,7 +92,7 @@ func (d *Deck) Index(indexHidden bool) error {
 			if err != nil {
 				return err
 			}
-
+			// todo
 			fmt.Printf("Found: %s, WillIndex: %t \n", osPathname, x)
 
 			// Update existing cards
@@ -115,5 +115,6 @@ func (d *Deck) Index(indexHidden bool) error {
 		return err
 	}
 
+	d.LastIndexed = time.Now().Format(time.RFC3339)
 	return nil
 }

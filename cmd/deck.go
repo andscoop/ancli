@@ -7,6 +7,7 @@ import (
 
 	"github.com/andscoop/ancli/config"
 	"github.com/andscoop/ancli/deck"
+	tm "github.com/buger/goterm"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +27,7 @@ func init() {
 	quizAlgo := config.GetString("defaultAlgo")
 
 	decksCreateCmd.Flags().StringVarP(&rootPathFlag, "filepath", "f", pwd, "filepath to index for deck")
-	decksCreateCmd.Flags().BoolVarP(&includeHiddenFlag, "include-hidden", "h", false, "maybe include hidden files")
+	// decksCreateCmd.Flags().BoolVarP(&includeHiddenFlag, "include-hidden", "h", false, "maybe include hidden files")
 	decksCreateCmd.Flags().StringVarP(&deckAlgoFlag, "algo", "a", quizAlgo, "reptition algo to use for the deck")
 }
 
@@ -46,10 +47,16 @@ var decksCmd = &cobra.Command{
 			panic(err)
 		}
 
+		deckStats := tm.NewTable(0, 10, 5, ' ', 0)
+		fmt.Fprintf(deckStats, "Name\tLastUsed\tRootDir\n")
+		fmt.Fprintf(deckStats, "----\t--------\t-------\n")
+
 		for _, d := range decks {
-			// todo print deck stats
-			fmt.Println(d.Name)
+			fmt.Fprintf(deckStats, "%s\t%s\t%s\n", d.Name, d.LastIndexed, d.RootDir)
 		}
+
+		tm.Println(deckStats)
+		tm.Flush()
 	},
 }
 
@@ -66,7 +73,7 @@ var decksCreateCmd = &cobra.Command{
 			QuizAlgo:   deckAlgoFlag,
 		}
 
-		err := d.IndexAndSave(includeHiddenFlag)
+		err := d.IndexAndSave(false)
 		if err != nil {
 			panic(err)
 		}

@@ -381,7 +381,7 @@ func (d *Deck) ToScreen() error {
 		"Path: %s\n", c.Fp,
 	)
 
-	tm.Print(">")
+	tm.Print("> ")
 
 	tm.Flush()
 
