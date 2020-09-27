@@ -14,5 +14,30 @@ Features Include:
   - support multiple spaced repetition algorithms, including [SM2](https://www.supermemo.com/en/archives1990-2015/english/ol/sm2)
   - saving deck progress to file system
 
-## Get Started and Best Practices
+## Creating a Card
+
+`ancli` is intended to be low overhead. With a few small changes to your standard note taking habits, you can begin creating question and answer cards for spaced repetition learning.
+
+### Standard Style
+
+To create an `ancli` card using the standard style, just place `---` anywhere in the file.
+
+```
+What kind of band plays snappy music?
+---
+A rubber band
+
+#ancli-jokes
+```
+
+The `#ancli-jokes` tag is used to denote this card belongs to the jokes deck. 
+
+### Inline Style
+
+Similarly, the inline style can be used for answers that fall inline with the question. The answer part of the card will be overwritten with `_`'s during a quiz.
+
+```
+The ~trunk~ is where an elephant stores its suitcase.
+#ancli-jokes
+```
 
