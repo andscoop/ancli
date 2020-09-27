@@ -2,6 +2,8 @@ package deck
 
 import (
 	"bufio"
+	"crypto/md5"
+	"fmt"
 	"math"
 	"math/rand"
 	"os"
@@ -225,8 +227,8 @@ func (d *Deck) SubmitCardAnswer() error {
 
 // PullCard pulls the current card of the deck
 func (d *Deck) PullCard() (*Card, error) {
-	fp := d.keys[d.index]
-	c, _ := d.Cards[fp]
+	k := d.keys[d.index]
+	c, _ := d.Cards[k]
 
 	err := c.parseQuiz()
 	if err != nil {
@@ -319,6 +321,11 @@ func indexStrikethrough(s string) (int, int) {
 
 func scrub(a string) string {
 	return strings.Trim(a, " \n")
+}
+
+func hashFp(fp string) string {
+	data := []byte(fp)
+	return fmt.Sprintf("%x", md5.Sum(data))
 }
 
 // ToScreen handles printing of deck quiz given current state
