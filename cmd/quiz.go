@@ -26,6 +26,7 @@ var quizCmd = &cobra.Command{
 		cBack := config.GetString("cmdShortcuts.back")
 		cPass := config.GetString("cmdShortcuts.pass")
 		cFail := config.GetString("cmdShortcuts.fail")
+		cArchive := config.GetString("cmdShortcuts.archive")
 
 		d := deck.LoadDeck(args[0])
 
@@ -35,7 +36,7 @@ var quizCmd = &cobra.Command{
 		d.Exec(deck.CmdNext)
 
 		for {
-			fsmCmd := "unknown"
+			var fsmCmd deck.Cmd
 
 			// read command from stdin
 			rawInput, err := reader.ReadString('\n')
@@ -56,6 +57,8 @@ var quizCmd = &cobra.Command{
 			case cFail:
 				fsmCmd = deck.CmdScore
 				d.LastScoreSubmitted = 0
+			case cArchive:
+				fsmCmd = deck.CmdArchive
 			default:
 				// attempt to convert to int
 				value, err := strconv.ParseInt(scrubbedInput, 0, 64)
