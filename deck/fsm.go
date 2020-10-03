@@ -54,6 +54,13 @@ func (d *Deck) Exec(cmd Cmd) {
 	}
 }
 
+// ArchiveTranstitionFunc is a commonly repeated archive command
+func ArchiveTranstitionFunc(d *Deck) {
+	d.ArchiveCard()
+	d.NextCard()
+	d.state = DisplayQuestion
+}
+
 // StateTransitionTable transition table
 var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	// Transitions from Idle
@@ -70,11 +77,7 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		d.LastCard()
 		d.state = DisplayQuestion
 	},
-	{CmdArchive, DisplayQuestion}: func(d *Deck) {
-		d.ArchiveCard()
-		d.NextCard()
-		d.state = DisplayQuestion
-	},
+	{CmdArchive, DisplayQuestion}: ArchiveTranstitionFunc,
 	// Transitions from DisplayAnswer
 	{CmdNext, DisplayAnswer}: func(d *Deck) {
 		d.NextCard()
@@ -87,11 +90,7 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		d.SubmitCardAnswer()
 		d.state = ScoreAnswer
 	},
-	{CmdArchive, DisplayAnswer}: func(d *Deck) {
-		d.ArchiveCard()
-		d.NextCard()
-		d.state = DisplayQuestion
-	},
+	{CmdArchive, DisplayAnswer}: ArchiveTranstitionFunc,
 	// Transitions from ScoreAnswer
 	{CmdNext, ScoreAnswer}: func(d *Deck) {
 		d.NextCard()
@@ -105,9 +104,5 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		d.LastCard()
 		d.state = DisplayQuestion
 	},
-	{CmdArchive, ScoreAnswer}: func(d *Deck) {
-		d.ArchiveCard()
-		d.NextCard()
-		d.state = DisplayQuestion
-	},
+	{CmdArchive, ScoreAnswer}: ArchiveTranstitionFunc,
 }

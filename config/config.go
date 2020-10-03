@@ -44,6 +44,7 @@ func Init() {
 	viper.SetDefault("cmdShortcuts.back", "a")
 	viper.SetDefault("cmdShortcuts.pass", "w")
 	viper.SetDefault("cmdShortcuts.fail", "s")
+	viper.SetDefault("cmdShortcuts.archive", "x")
 	// algo configs
 	viper.SetDefault("defaultAlgo", "sm2")
 	viper.SetDefault("defaultEasyFactor", 2.5)
