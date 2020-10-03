@@ -89,6 +89,11 @@ func LoadDeck(name string) *Deck {
 	return &d
 }
 
+// Save saves current deck back to index
+func (d *Deck) Save() {
+	config.SetAndSave("decks."+d.Name, d.Cards)
+}
+
 // shouldQuizFuncs are responsible for determining if a card is due
 // to be quizzed in accordance with the quiz algorithm in the config or
 // passed through via flags
@@ -233,7 +238,7 @@ func (d *Deck) SubmitCardAnswer() error {
 		}
 	}
 
-	config.SetAndSave("decks", d.Cards)
+	d.Save()
 
 	return nil
 }
