@@ -2,7 +2,6 @@ package deck
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,7 +70,7 @@ func (d *Deck) IndexAndSave(indexHidden bool) error {
 		return err
 	}
 
-	config.SetAndSave("decks."+d.Name, d)
+	d.Save()
 
 	return nil
 }
@@ -92,16 +91,15 @@ func (d *Deck) Index(indexHidden bool) error {
 			if err != nil {
 				return err
 			}
-			// todo
-			fmt.Printf("Found: %s, WillIndex: %t \n", osPathname, x)
 
 			// Update existing cards
 			if c, ok := cards[fpHash]; ok {
 				c.LastIndexed = time.Now().Format(time.RFC3339)
+				c.IsArchived = false
 				cards[fpHash] = c
 			} else {
 				if x {
-					cards[fpHash] = &Card{Fp: osPathname, LastIndexed: time.Now().Format(time.RFC3339)}
+					cards[fpHash] = &Card{Fp: osPathname, LastIndexed: time.Now().Format(time.RFC3339), IsArchived: false}
 				}
 			}
 

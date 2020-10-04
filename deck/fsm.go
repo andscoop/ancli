@@ -2,7 +2,6 @@ package deck
 
 import (
 	"fmt"
-	"strings"
 )
 
 // State type for readability of state machine
@@ -17,24 +16,25 @@ const (
 	DisplayAnswer
 	// ScoreAnswer updates score factors and tells user quizoutcome
 	ScoreAnswer
-	// // PassAnswer lets the user know they passed the quiz
-	// PassAnswer
-	// // FailAnswer lets the user know they failed the quiz
-	// FailAnswer
 )
+
+// Cmd type for readability of state machine
+type Cmd uint8
 
 const (
 	// CmdNext execs a "next" transition
-	CmdNext = "next"
+	CmdNext Cmd = iota
 	// CmdBack execs a "prev" transition
-	CmdBack = "back"
+	CmdBack
 	// CmdScore marks an card quiz answer as correct
-	CmdScore = "score"
+	CmdScore
+	// CmdArchive will take a card out of quiz mode
+	CmdArchive
 )
 
 // CmdStateTupple tupple for state-command combination
 type CmdStateTupple struct {
-	Cmd   string
+	Cmd   Cmd
 	State State
 }
 
@@ -42,10 +42,10 @@ type CmdStateTupple struct {
 type TransitionFunc func(deck *Deck)
 
 // Exec will attempt to transition the state machine
-func (d *Deck) Exec(cmd string) {
+func (d *Deck) Exec(cmd Cmd) {
 	// get function from transition table
 
-	tupple := CmdStateTupple{strings.TrimSpace(cmd), d.state}
+	tupple := CmdStateTupple{cmd, d.state}
 	if f := StateTransitionTable[tupple]; f == nil {
 		fmt.Println("unknown command, try again please")
 	} else {
@@ -54,22 +54,44 @@ func (d *Deck) Exec(cmd string) {
 	}
 }
 
+// ArchiveTranstitionFunc is a commonly repeated archive command
+func ArchiveTranstitionFunc(d *Deck) {
+	d.ArchiveCard()
+	d.NextCard()
+	d.state = DisplayQuestion
+}
+
 // StateTransitionTable transition table
 var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	// Transitions from Idle
 	{CmdNext, Idle}: func(d *Deck) {
+		if d.ShouldRandom() {
+			d.RandCard()
+		}
+
+		d.NextCard()
 		d.state = DisplayQuestion
 	},
 	// Transitions from DisplayQuestion
 	{CmdNext, DisplayQuestion}: func(d *Deck) {
+		if d.ShouldRandom() {
+			d.RandCard()
+		}
+
+		d.NextCard()
 		d.state = DisplayAnswer
 	},
 	{CmdBack, DisplayQuestion}: func(d *Deck) {
 		d.LastCard()
 		d.state = DisplayQuestion
 	},
+	{CmdArchive, DisplayQuestion}: ArchiveTranstitionFunc,
 	// Transitions from DisplayAnswer
 	{CmdNext, DisplayAnswer}: func(d *Deck) {
+		if d.ShouldRandom() {
+			d.RandCard()
+		}
+
 		d.NextCard()
 		d.state = DisplayQuestion
 	},
@@ -80,8 +102,13 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		d.SubmitCardAnswer()
 		d.state = ScoreAnswer
 	},
+	{CmdArchive, DisplayAnswer}: ArchiveTranstitionFunc,
 	// Transitions from ScoreAnswer
 	{CmdNext, ScoreAnswer}: func(d *Deck) {
+		if d.ShouldRandom() {
+			d.RandCard()
+		}
+
 		d.NextCard()
 		d.state = DisplayQuestion
 	},
@@ -93,4 +120,5 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		d.LastCard()
 		d.state = DisplayQuestion
 	},
+	{CmdArchive, ScoreAnswer}: ArchiveTranstitionFunc,
 }

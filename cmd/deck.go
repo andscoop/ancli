@@ -32,11 +32,10 @@ func init() {
 }
 
 var decksCmd = &cobra.Command{
-	Use: "decks",
-	// todo alias to deck
-	Short: "List all decks and their configurations",
-	Long:  `List all decks and their configurations`,
-	// Args:  cobra.ExactArgs(1),
+	Use:     "decks",
+	Aliases: []string{"deck"},
+	Short:   "List all decks and their configurations",
+	Long:    `List all decks and their configurations`,
 	Run: func(cmd *cobra.Command, args []string) {
 		c := config.GetConfig()
 

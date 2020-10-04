@@ -39,6 +39,7 @@ type Deck struct {
 	LastIndexed        string
 	Name               string
 	RootDir            string
+	useRandomOrder     bool
 }
 
 // Decks on decks
@@ -58,6 +59,7 @@ type Card struct {
 	EasyFactor   float64 // sm2 only
 	FibIteration int     // fib only
 	quiz         Quiz
+	IsArchived   bool
 }
 
 // Quiz holds question/answer elems of a card
@@ -73,8 +75,9 @@ func LoadDeck(name string) *Deck {
 	quizAlgo := config.GetString("defaultAlgo")
 
 	var d = Deck{
-		Name:     name,
-		QuizAlgo: quizAlgo,
+		Name:           name,
+		QuizAlgo:       quizAlgo,
+		useRandomOrder: false,
 	}
 
 	c := config.GetConfig()
@@ -84,9 +87,26 @@ func LoadDeck(name string) *Deck {
 		panic(err)
 	}
 
+	fmt.Printf("%v", d)
 	d.syncQuizzableCards()
 
 	return &d
+}
+
+// Save saves current deck back to index
+func (d *Deck) Save() {
+	config.SetAndSave("decks."+d.Name, d)
+}
+
+// EnableRandom will use a random card ordering
+// Public receiver for a private attr to avoid it being
+// written to the config
+func (d *Deck) EnableRandom() {
+	d.useRandomOrder = true
+}
+
+func (d *Deck) ShouldRandom() bool {
+	return d.useRandomOrder
 }
 
 // shouldQuizFuncs are responsible for determining if a card is due
@@ -139,7 +159,6 @@ func shouldQuizSM2(c *Card) bool {
 		}
 		return false
 	default:
-		// todo double check conversion and cleanup
 		calc := float64(reps-1) * ef
 		expectedIntervalHours := math.Ceil(calc)
 		expectedIntervalDays := (time.Duration(expectedIntervalHours) * time.Hour) / 24
@@ -189,16 +208,17 @@ func (d *Deck) getQuizAlgo() string {
 // syncQuizzableCards adds quizzable cards to Deck.Keys
 // a card is quizzable if it ShouldQuiz()
 func (d *Deck) syncQuizzableCards() error {
-	dqa := d.getQuizAlgo()
+	qa := d.getQuizAlgo()
 
-	shouldQuiz := shouldQuizFuncs[dqa]
+	shouldQuiz := shouldQuizFuncs[qa]
 
 	for k, c := range d.Cards {
-		if shouldQuiz(c) {
+		if shouldQuiz(c) && !c.IsArchived {
 			d.keys = append(d.keys, k)
 		}
 	}
 
+	fmt.Printf("%v", d.keys)
 	return nil
 }
 
@@ -233,7 +253,7 @@ func (d *Deck) SubmitCardAnswer() error {
 		}
 	}
 
-	config.SetAndSave("decks", d.Cards)
+	d.Save()
 
 	return nil
 }
@@ -271,11 +291,19 @@ func (d *Deck) LastCard() {
 	}
 }
 
-// RandCard will return a random card from the deck. TODO
+// RandCard will return a random card from the deck.
 func (d *Deck) RandCard() {
 	v := rand.Intn(len(d.Cards) - 1)
 
 	d.index = v
+}
+
+// ArchiveCard will mark a card as archived so it won't be quizzed
+func (d *Deck) ArchiveCard() {
+	c, _ := d.PullCard()
+	c.IsArchived = true
+
+	d.Save()
 }
 
 func (c *Card) parseQuiz() error {
@@ -353,6 +381,7 @@ func (d *Deck) ToScreen() error {
 	cBack := config.GetString("cmdShortcuts.back")
 	cPass := config.GetString("cmdShortcuts.pass")
 	cFail := config.GetString("cmdShortcuts.fail")
+	cArchive := config.GetString("cmdShortcuts.archive")
 
 	switch d.state {
 	case DisplayAnswer:
@@ -373,9 +402,11 @@ func (d *Deck) ToScreen() error {
 	tm.Println(screen)
 
 	tm.Printf(
-		"\n\nnext (%s)  back (%s)  pass (%s)  fail (%s)\n",
-		cNext, cBack, cPass, cFail,
+		"\n\nnext (%s)  back (%s)  pass (%s)  fail (%s)  archive (%s)\n",
+		cNext, cBack, cPass, cFail, cArchive,
 	)
+
+	tm.Printf("index: %v", d.index)
 
 	tm.Printf(
 		"Path: %s\n", c.Fp,
