@@ -12,8 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var randOrderFlag bool
+
 func init() {
 	rootCmd.AddCommand(quizCmd)
+
+	quizCmd.Flags().BoolVarP(&randOrderFlag, "random", "r", false, "shuffle card order in quiz")
+
 }
 
 var quizCmd = &cobra.Command{
@@ -31,6 +36,10 @@ var quizCmd = &cobra.Command{
 		d := deck.LoadDeck(args[0])
 
 		reader := bufio.NewReader(os.Stdin)
+
+		if randOrderFlag {
+			d.EnableRandom()
+		}
 
 		// kick it out of idle state
 		d.Exec(deck.CmdNext)

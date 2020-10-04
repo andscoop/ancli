@@ -39,6 +39,7 @@ type Deck struct {
 	LastIndexed        string
 	Name               string
 	RootDir            string
+	useRandomOrder     bool
 }
 
 // Decks on decks
@@ -74,8 +75,9 @@ func LoadDeck(name string) *Deck {
 	quizAlgo := config.GetString("defaultAlgo")
 
 	var d = Deck{
-		Name:     name,
-		QuizAlgo: quizAlgo,
+		Name:           name,
+		QuizAlgo:       quizAlgo,
+		useRandomOrder: false,
 	}
 
 	c := config.GetConfig()
@@ -94,6 +96,17 @@ func LoadDeck(name string) *Deck {
 // Save saves current deck back to index
 func (d *Deck) Save() {
 	config.SetAndSave("decks."+d.Name, d)
+}
+
+// EnableRandom will use a random card ordering
+// Public receiver for a private attr to avoid it being
+// written to the config
+func (d *Deck) EnableRandom() {
+	d.useRandomOrder = true
+}
+
+func (d *Deck) ShouldRandom() bool {
+	return d.useRandomOrder
 }
 
 // shouldQuizFuncs are responsible for determining if a card is due
@@ -392,6 +405,8 @@ func (d *Deck) ToScreen() error {
 		"\n\nnext (%s)  back (%s)  pass (%s)  fail (%s)  archive (%s)\n",
 		cNext, cBack, cPass, cFail, cArchive,
 	)
+
+	tm.Printf("index: %v", d.index)
 
 	tm.Printf(
 		"Path: %s\n", c.Fp,
