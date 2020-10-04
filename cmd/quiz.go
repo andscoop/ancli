@@ -71,7 +71,9 @@ var quizCmd = &cobra.Command{
 			default:
 				// attempt to convert to int
 				value, err := strconv.ParseInt(scrubbedInput, 0, 64)
-				if err == nil {
+				if err != nil {
+					fsmCmd = deck.CmdUnknown
+				} else {
 					fsmCmd = deck.CmdScore
 					d.LastScoreSubmitted = value
 				}

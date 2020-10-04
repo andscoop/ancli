@@ -30,6 +30,8 @@ const (
 	CmdScore
 	// CmdArchive will take a card out of quiz mode
 	CmdArchive
+	// CmdUnknown is a catchup and should throw an error
+	CmdUnknown
 )
 
 // CmdStateTupple tupple for state-command combination
@@ -44,7 +46,6 @@ type TransitionFunc func(deck *Deck)
 // Exec will attempt to transition the state machine
 func (d *Deck) Exec(cmd Cmd) {
 	// get function from transition table
-
 	tupple := CmdStateTupple{cmd, d.state}
 	if f := StateTransitionTable[tupple]; f == nil {
 		fmt.Println("unknown command, try again please")

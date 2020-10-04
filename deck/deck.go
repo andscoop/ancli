@@ -406,8 +406,6 @@ func (d *Deck) ToScreen() error {
 		cNext, cBack, cPass, cFail, cArchive,
 	)
 
-	tm.Printf("index: %v", d.index)
-
 	tm.Printf(
 		"Path: %s\n", c.Fp,
 	)
