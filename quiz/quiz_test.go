@@ -1,6 +1,7 @@
 package quiz
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -8,6 +9,8 @@ func testEq(a, b []byte) bool {
 
 	// If one is nil, the other must also be nil.
 	if (a == nil) != (b == nil) {
+		fmt.Printf("a: %v", (a == nil))
+		fmt.Printf("b: %v", (b == nil))
 		return false
 	}
 
@@ -37,13 +40,6 @@ func TestParseQuizTypes(t *testing.T) {
 		{[]byte{'a', 'b', '~', '~', 'c', 'd', '~', '~', 'e', 'f', 'g'}, "TypeCheck basic Inline", Inline},
 		{[]byte{'a', 'b', '~', '~', 'c', 'd'}, "TypeCheck NoQuiz with opening tildes only", NoQuiz},
 		{[]byte{'a', 'b', 'c', '-', '-', '-'}, "TypeCheck NoQuiz with no bytes following dashes", NoQuiz},
-		// Q/A Checks
-		{[]byte{}, "Q/A NullQuiz", NullQuiz},
-		// {[]byte{'a', 'b', 'c', 'd', 'e', 'f', 'g'}, "NoQuiz Type Check", NoQuiz},
-		// {[]byte{'a', 'b', 'c', '-', '-', '-', 'd', 'e', 'f', 'g'}, "Card Type Check", Card},
-		// {[]byte{'a', 'b', '~', '~', 'c', 'd', '~', '~', 'e', 'f', 'g'}, "Inline Type Check", Inline},
-		// {[]byte{'a', 'b', '~', '~', 'c', 'd'}, "Missing closing tildes Type Check", NoQuiz},
-		// {[]byte{'a', 'b', 'c', '-', '-', '-'}, "NoQuiz because missing answer", NoQuiz},
 	}
 
 	for _, tt := range tests {
@@ -64,17 +60,18 @@ func TestParseQuestionsAndAnswers(t *testing.T) {
 		wantAnswer   []byte
 	}{
 		// Q/A Checks
-		// {[]byte{}, "Q/A NullQuiz", nil, nil},
+		{[]byte{}, "Q/A NullQuiz", nil, nil},
 		{[]byte{'a', 'b', 'c', 'd', 'e', 'f', 'g'}, "Q/A NoQuiz", []byte{'a', 'b', 'c', 'd', 'e', 'f', 'g'}, nil},
 		{[]byte{'a', 'b', 'c', '-', '-', '-', 'd', 'e', 'f', 'g'}, "Q/A Card", []byte{'a', 'b', 'c'}, []byte{'d', 'e', 'f', 'g'}},
-		// {[]byte{'a', 'b', '~', '~', 'c', 'd', '~', '~', 'e', 'f', 'g'}, "Q/A Inline", []byte{'a', 'b', '_', '_', 'e', 'f', 'g'}, []byte{'a', 'b', 'c', 'd', 'e', 'f', 'g'}},
-		// {[]byte{'a', 'b', '~', '~', 'c', 'd'}, "Missing closing tildes Type Check", NoQuiz},
-		// {[]byte{'a', 'b', 'c', '-', '-', '-'}, "NoQuiz because missing answer", NoQuiz},
+		{[]byte{'a', 'b', '~', '~', 'c', 'd', '~', '~', 'e', 'f', 'g'}, "Q/A Inline", []byte{'a', 'b', '_', '_', 'e', 'f', 'g'}, []byte{'a', 'b', '~', '~', 'c', 'd', '~', '~', 'e', 'f', 'g'}},
+		{[]byte{'a', 'b', '~', '~', 'c', 'd'}, "Q/A Missing closing tildes", []byte{'a', 'b', '~', '~', 'c', 'd'}, nil},
+		{[]byte{'a', 'b', 'c', '-', '-', '-'}, "Q/A Card Missing answer", []byte{'a', 'b', 'c', '-', '-', '-'}, nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			have := Parse(tt.b)
+
 			if !testEq(have.question, tt.wantQuestion) {
 				t.Errorf("got question %v, want %v", have.question, tt.wantQuestion)
 			}
