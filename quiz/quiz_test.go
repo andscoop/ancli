@@ -63,9 +63,10 @@ func TestParseQuestionsAndAnswers(t *testing.T) {
 		{[]byte{}, "Q/A NullQuiz", nil, nil},
 		{[]byte{'a', 'b', 'c', 'd', 'e', 'f', 'g'}, "Q/A NoQuiz", []byte{'a', 'b', 'c', 'd', 'e', 'f', 'g'}, nil},
 		{[]byte{'a', 'b', 'c', '-', '-', '-', 'd', 'e', 'f', 'g'}, "Q/A Card", []byte{'a', 'b', 'c'}, []byte{'d', 'e', 'f', 'g'}},
-		{[]byte{'a', 'b', '~', '~', 'c', 'd', '~', '~', 'e', 'f', 'g'}, "Q/A Inline", []byte{'a', 'b', '_', '_', 'e', 'f', 'g'}, []byte{'a', 'b', '~', '~', 'c', 'd', '~', '~', 'e', 'f', 'g'}},
+		{[]byte{'a', 'b', '~', '~', 'c', 'd', 'e', '~', '~', 'f', 'g'}, "Q/A Inline", []byte{'a', 'b', '_', '_', '_', 'f', 'g'}, []byte{'a', 'b', '~', '~', 'c', 'd', 'e', '~', '~', 'f', 'g'}},
 		{[]byte{'a', 'b', '~', '~', 'c', 'd'}, "Q/A Missing closing tildes", []byte{'a', 'b', '~', '~', 'c', 'd'}, nil},
 		{[]byte{'a', 'b', 'c', '-', '-', '-'}, "Q/A Card Missing answer", []byte{'a', 'b', 'c', '-', '-', '-'}, nil},
+		{[]byte("The ~~trunk~~ is where an elephant stores its suitcase."), "Q/A example card", []byte("The _____ is where an elephant stores its suitcase."), []byte("The ~~trunk~~ is where an elephant stores its suitcase.")},
 	}
 
 	for _, tt := range tests {
@@ -73,11 +74,11 @@ func TestParseQuestionsAndAnswers(t *testing.T) {
 			have := Parse(tt.b)
 
 			if !testEq(have.question, tt.wantQuestion) {
-				t.Errorf("got question %v, want %v", have.question, tt.wantQuestion)
+				t.Errorf("got question %s\n want %s\n", string(have.question), string(tt.wantQuestion))
 			}
 
 			if !testEq(have.answer, tt.wantAnswer) {
-				t.Errorf("got answer %v, want %v", have.answer, tt.wantAnswer)
+				t.Errorf("got answer %s\n want %s\n", string(have.answer), string(tt.wantAnswer))
 			}
 		})
 	}

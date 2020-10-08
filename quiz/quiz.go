@@ -48,12 +48,10 @@ func getCopy(s []byte) []byte {
 // and return a quiz ready to be used
 func Parse(b []byte) Quiz {
 	l := len(b)
-	qbs := getCopy(b)
-	abs := getCopy(b)
 
 	q := Quiz{
 		Type:     NoQuiz,
-		question: qbs,
+		question: b,
 	}
 
 	if l == 0 {
@@ -63,35 +61,27 @@ func Parse(b []byte) Quiz {
 	}
 
 	// check for ---
-	if i := bytes.Index(b, []byte{'-', '-', '-'}); i >= 0 {
-		if i+3 < l {
-			q.question = qbs[0:i]
-			q.answer = abs[i+3 : l]
-			q.Type = Card
-		}
-
+	parts := bytes.SplitN(b, []byte{'-', '-', '-'}, 3)
+	if len(parts) >= 2 && len(parts[1]) != 0 {
+		q.question = parts[0]
+		q.answer = parts[1]
+		q.Type = Card
 		return q
 	}
 
 	// check for inline ~~
-	if s := bytes.Index(b, []byte{'~', '~'}); s >= 0 {
-		// found opening ~~, try to close it out
-		if e := bytes.Index(b[s+2:l], []byte{'~', '~'}); e >= 0 {
-			q.answer = abs
-			q.Type = Inline
+	parts = bytes.SplitN(b, []byte{'~', '~'}, 4)
 
-			blanks := bytes.Repeat([]byte{'_'}, (s+2)-e)
-
-			// put it back together
-			qbs2 := getCopy(qbs[0:s])
-			qbs2 = append(qbs2, blanks...)
-			// +4 accounts for removing opening and closing tildes
-			qbs2 = append(qbs2, qbs[s+e+4:l]...)
-
-			q.question = qbs2
-
-			return q
+	if len(parts) >= 3 {
+		blanks := getCopy(parts[1])
+		for i := range blanks {
+			blanks[i] = '_'
 		}
+		parts[1] = blanks
+
+		q.answer = getCopy(b)
+		q.Type = Inline
+		q.question = bytes.Join(parts, nil)
 	}
 
 	return q
