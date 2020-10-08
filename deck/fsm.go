@@ -79,7 +79,7 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 			d.RandCard()
 		}
 
-		d.NextCard()
+		d.PullCard()
 		d.state = DisplayAnswer
 	},
 	{CmdBack, DisplayQuestion}: func(d *Deck) {
