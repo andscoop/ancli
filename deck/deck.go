@@ -1,16 +1,16 @@
 package deck
 
 import (
-	"bufio"
 	"crypto/md5"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/andscoop/ancli/config"
+	"github.com/andscoop/ancli/quiz"
 	tm "github.com/buger/goterm"
 )
 
@@ -58,16 +58,8 @@ type Card struct {
 	Reptitions   int
 	EasyFactor   float64 // sm2 only
 	FibIteration int     // fib only
-	quiz         Quiz
+	quiz         quiz.Quiz
 	IsArchived   bool
-}
-
-// Quiz holds question/answer elems of a card
-// It is loaded JIT by parser
-type Quiz struct {
-	Question string
-	Answer   string
-	HasBlank bool
 }
 
 // LoadDeck TODO
@@ -87,7 +79,6 @@ func LoadDeck(name string) *Deck {
 		panic(err)
 	}
 
-	fmt.Printf("%v", d)
 	d.syncQuizzableCards()
 
 	return &d
@@ -192,6 +183,30 @@ func (c *Card) getEF() float64 {
 	}
 
 	return ef
+}
+
+func (c *Card) open() ([]byte, error) {
+	file, err := os.Open(c.Fp)
+	defer file.Close()
+	buf, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func (c *Card) parseQuiz() error {
+	b, err := c.open()
+	if err != nil {
+		return err
+	}
+
+	q := quiz.Parse(b)
+
+	c.quiz = q
+
+	return nil
 }
 
 // getQuizAlgo fetches set quizAlgo, falls back to global default
@@ -306,64 +321,6 @@ func (d *Deck) ArchiveCard() {
 	d.Save()
 }
 
-func (c *Card) parseQuiz() error {
-	scannedLines := make([]string, 1)
-	remainingLines := make([]string, 1)
-	q := Quiz{}
-
-	file, err := os.Open(c.Fp)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	// todo clean this up. FSM?
-	for scanner.Scan() {
-		t := scanner.Text()
-
-		b, e := indexStrikethrough(t)
-		if (b == -1) || (e == -1) {
-			q.HasBlank = false
-		} else {
-			q.HasBlank = true
-			q.Answer = scrub(t[b+1 : e])
-			// replace strikethrough text with underscores
-			q.Question = scrub(strings.Replace(t, t[b:e+1], strings.Repeat("_", e-b), 1))
-			break
-		}
-		if strings.Trim(t, " ") == "---" {
-			q.Question = scrub(strings.Join(scannedLines, "\n"))
-
-			// we know where the question and answer are
-			// fast parse rest of card
-			for scanner.Scan() {
-				remainingLines = append(remainingLines, scanner.Text())
-			}
-
-			q.Answer = scrub(strings.Join(remainingLines, "\n"))
-			break
-		}
-
-		scannedLines = append(scannedLines, t)
-	}
-
-	c.quiz = q
-
-	return nil
-}
-
-func indexStrikethrough(s string) (int, int) {
-	b := strings.Index(s, "~")
-	e := strings.LastIndex(s, "~")
-	return b, e
-}
-
-func scrub(a string) string {
-	return strings.Trim(a, " \n")
-}
-
 func hashFp(fp string) string {
 	data := []byte(fp)
 	return fmt.Sprintf("%x", md5.Sum(data))
@@ -375,7 +332,7 @@ func (d *Deck) ToScreen() error {
 	if err != nil {
 		return err
 	}
-	screen := c.quiz.Question
+	screen := c.quiz.Question()
 
 	cNext := config.GetString("cmdShortcuts.next")
 	cBack := config.GetString("cmdShortcuts.back")
@@ -383,11 +340,17 @@ func (d *Deck) ToScreen() error {
 	cFail := config.GetString("cmdShortcuts.fail")
 	cArchive := config.GetString("cmdShortcuts.archive")
 
+	answer := c.quiz.Answer()
+
 	switch d.state {
 	case DisplayAnswer:
-		screen = screen + "\n\n" + c.quiz.Answer
+		if c.quiz.Type == quiz.Inline {
+			screen = answer
+		} else {
+			screen = screen + "\n\n" + answer
+		}
 	case ScoreAnswer:
-		screen = screen + "\n\n" + c.quiz.Answer
+		screen = screen + "\n\n" + answer
 		if d.LastScoreSubmitted == 0 {
 			screen = screen + "\n\n" + failOutput
 		} else {
