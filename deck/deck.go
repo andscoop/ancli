@@ -35,7 +35,7 @@ type Deck struct {
 	shouldQuiz         shouldQuizFunc
 	LastScoreSubmitted int64
 	QuizAlgo           string
-	DeckPrefix         string
+	DeckRegex          string
 	LastIndexed        string
 	Name               string
 	RootDir            string
@@ -62,7 +62,7 @@ type Card struct {
 	IsArchived   bool
 }
 
-// LoadDeck TODO
+// LoadDeck will load a deck from a saved config
 func LoadDeck(name string) *Deck {
 	quizAlgo := config.GetString("defaultAlgo")
 
@@ -96,6 +96,7 @@ func (d *Deck) EnableRandom() {
 	d.useRandomOrder = true
 }
 
+// ShouldRandom tells whether or not deck cards should be pulled in rand order
 func (d *Deck) ShouldRandom() bool {
 	return d.useRandomOrder
 }

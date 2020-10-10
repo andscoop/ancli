@@ -2,8 +2,10 @@ package deck
 
 import (
 	"bufio"
+	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -31,7 +33,20 @@ func isDir(fp string) bool {
 	return info.IsDir()
 }
 
-func shouldIndex(fp, deckPrefix string) (bool, error) {
+func isRegexMatch(r io.Reader, deckRegex string) bool {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+
+		match, err := regexp.MatchString(deckRegex, scanner.Text())
+		if err == nil || match {
+			return true
+		}
+	}
+
+	return false
+}
+
+func shouldIndex(fp, deckRegex string) (bool, error) {
 	ext := config.GetString("cardFileExt")
 	fpParts := strings.Split(fp, ".")
 
@@ -49,18 +64,7 @@ func shouldIndex(fp, deckPrefix string) (bool, error) {
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), deckPrefix) {
-			return true, nil
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return false, err
-	}
-
-	return false, nil
+	return isRegexMatch(file, deckRegex), nil
 }
 
 // IndexAndSave rebuilds the deck index and saves it to a file
@@ -87,7 +91,7 @@ func (d *Deck) Index(indexHidden bool) error {
 				return filepath.SkipDir
 			}
 
-			x, err := shouldIndex(osPathname, d.DeckPrefix)
+			x, err := shouldIndex(osPathname, d.DeckRegex)
 			if err != nil {
 				return err
 			}
