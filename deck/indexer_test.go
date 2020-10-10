@@ -1,7 +1,6 @@
 package deck
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -32,7 +31,6 @@ func TestCardIndexer(t *testing.T) {
 			path := strings.SplitN(wd, "/", -1)
 			rootDir := strings.Join(path[0:len(path)-1], "/")
 
-			fmt.Println(rootDir + tt.relFP)
 			haveShouldIndex, err := shouldIndex(rootDir+tt.relFP, tt.cardRegex, tt.fpRegex)
 			if err != nil {
 				panic(err)
