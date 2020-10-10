@@ -66,17 +66,16 @@ type Card struct {
 func LoadDeck(name string, shouldShuffle bool) (*Deck, error) {
 	quizAlgo := config.GetString("defaultAlgo")
 
+	if !DeckIsSet(name) {
+		return nil, fmt.Errorf("config: deck not found in saved config, %s", name)
+	}
+
 	var d = Deck{
 		Name:     name,
 		QuizAlgo: quizAlgo,
 	}
 
 	c := config.GetConfig()
-
-	b := c.IsSet("decks." + name)
-	if !b {
-		return nil, fmt.Errorf("config: deck not found in saved config, %s", name)
-	}
 
 	err := c.UnmarshalKey("decks."+name, &d)
 	if err != nil {
@@ -91,6 +90,12 @@ func LoadDeck(name string, shouldShuffle bool) (*Deck, error) {
 	}
 
 	return &d, nil
+}
+
+// DeckIsSet checks if deck exist in config
+func DeckIsSet(name string) bool {
+	c := config.GetConfig()
+	return c.IsSet("decks." + name)
 }
 
 // Save saves current deck back to index

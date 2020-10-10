@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/andscoop/ancli/config"
 	"github.com/andscoop/ancli/deck"
@@ -9,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var includeHiddenFlag bool
 var deckAlgoFlag string
+var deckOverrideFlag bool
 
 func init() {
 	rootCmd.AddCommand(decksCmd)
@@ -19,6 +20,7 @@ func init() {
 	quizAlgo := config.GetString("defaultAlgo")
 
 	decksCreateCmd.Flags().StringVarP(&deckAlgoFlag, "algo", "a", quizAlgo, "reptition algo to use for the deck")
+	decksCreateCmd.Flags().BoolVarP(&deckOverrideFlag, "override", "o", false, "destructively override any existing decks w/ same name")
 }
 
 var decksCmd = &cobra.Command{
@@ -55,6 +57,12 @@ var decksCreateCmd = &cobra.Command{
 	Long:  `Create a new deck`,
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
+		if deck.DeckIsSet(args[0]) && !deckOverrideFlag {
+			fmt.Printf("deck: deck namespace taken, %s\n", args[0])
+			fmt.Println("Hint: use `--override` recreate existing deck (destructive action)")
+			os.Exit(1)
+		}
+
 		d := deck.Deck{
 			Name:      args[0],
 			DeckRegex: args[1],
