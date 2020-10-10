@@ -63,7 +63,7 @@ type Card struct {
 }
 
 // LoadDeck will load a deck from a saved config
-func LoadDeck(name string, shouldShuffle bool) *Deck {
+func LoadDeck(name string, shouldShuffle bool) (*Deck, error) {
 	quizAlgo := config.GetString("defaultAlgo")
 
 	var d = Deck{
@@ -72,6 +72,11 @@ func LoadDeck(name string, shouldShuffle bool) *Deck {
 	}
 
 	c := config.GetConfig()
+
+	b := c.IsSet("decks." + name)
+	if !b {
+		return nil, fmt.Errorf("config: deck not found in saved config, %s", name)
+	}
 
 	err := c.UnmarshalKey("decks."+name, &d)
 	if err != nil {
@@ -85,7 +90,7 @@ func LoadDeck(name string, shouldShuffle bool) *Deck {
 		})
 	}
 
-	return &d
+	return &d, nil
 }
 
 // Save saves current deck back to index

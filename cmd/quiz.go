@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -33,7 +34,12 @@ var quizCmd = &cobra.Command{
 		cFail := config.GetString("cmdShortcuts.fail")
 		cArchive := config.GetString("cmdShortcuts.archive")
 
-		d := deck.LoadDeck(args[0], randOrderFlag)
+		d, err := deck.LoadDeck(args[0], randOrderFlag)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("Hint: use `ancli decks` to see existing decks")
+			os.Exit(1)
+		}
 
 		reader := bufio.NewReader(os.Stdin)
 
