@@ -37,8 +37,8 @@ func Init() {
 	viper.SetConfigFile(HomeConfigFile)
 
 	viper.AutomaticEnv()
-
-	viper.SetDefault("cardFileExt", "md")
+	// regex filter for file paths and file types
+	viper.SetDefault("fpRegex", ".md")
 	// wasd default
 	viper.SetDefault("cmdShortcuts.next", "d")
 	viper.SetDefault("cmdShortcuts.back", "a")

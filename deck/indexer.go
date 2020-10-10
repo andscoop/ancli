@@ -2,7 +2,6 @@ package deck
 
 import (
 	"bufio"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,28 +32,13 @@ func isDir(fp string) bool {
 	return info.IsDir()
 }
 
-func isRegexMatch(r io.Reader, deckRegex string) bool {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-
-		match, err := regexp.MatchString(deckRegex, scanner.Text())
-		if err == nil || match {
-			return true
-		}
-	}
-
-	return false
-}
-
-func shouldIndex(fp, deckRegex string) (bool, error) {
-	ext := config.GetString("cardFileExt")
-	fpParts := strings.Split(fp, ".")
-
-	if fpParts[len(fpParts)-1] != ext {
+func shouldIndex(fp, deckRegex, fpRegex string) (bool, error) {
+	if isDir(fp) {
 		return false, nil
 	}
 
-	if isDir(fp) {
+	fpMatch, err := regexp.MatchString(fpRegex, fp)
+	if !fpMatch {
 		return false, nil
 	}
 
@@ -64,7 +48,16 @@ func shouldIndex(fp, deckRegex string) (bool, error) {
 	}
 	defer file.Close()
 
-	return isRegexMatch(file, deckRegex), nil
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+
+		match, _ := regexp.MatchString(deckRegex, scanner.Text())
+		if match {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // IndexAndSave rebuilds the deck index and saves it to a file
@@ -91,7 +84,9 @@ func (d *Deck) Index(indexHidden bool) error {
 				return filepath.SkipDir
 			}
 
-			x, err := shouldIndex(osPathname, d.DeckRegex)
+			fpRegex := config.GetString("fpRegex")
+
+			x, err := shouldIndex(osPathname, d.DeckRegex, fpRegex)
 			if err != nil {
 				return err
 			}
