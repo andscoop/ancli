@@ -66,19 +66,11 @@ func ArchiveTranstitionFunc(d *Deck) {
 var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	// Transitions from Idle
 	{CmdNext, Idle}: func(d *Deck) {
-		if d.ShouldRandom() {
-			d.RandCard()
-		}
-
 		d.NextCard()
 		d.state = DisplayQuestion
 	},
 	// Transitions from DisplayQuestion
 	{CmdNext, DisplayQuestion}: func(d *Deck) {
-		if d.ShouldRandom() {
-			d.RandCard()
-		}
-
 		d.PullCard()
 		d.state = DisplayAnswer
 	},
@@ -89,10 +81,6 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	{CmdArchive, DisplayQuestion}: ArchiveTranstitionFunc,
 	// Transitions from DisplayAnswer
 	{CmdNext, DisplayAnswer}: func(d *Deck) {
-		if d.ShouldRandom() {
-			d.RandCard()
-		}
-
 		d.NextCard()
 		d.state = DisplayQuestion
 	},
@@ -106,10 +94,6 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	{CmdArchive, DisplayAnswer}: ArchiveTranstitionFunc,
 	// Transitions from ScoreAnswer
 	{CmdNext, ScoreAnswer}: func(d *Deck) {
-		if d.ShouldRandom() {
-			d.RandCard()
-		}
-
 		d.NextCard()
 		d.state = DisplayQuestion
 	},

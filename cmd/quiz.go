@@ -33,13 +33,9 @@ var quizCmd = &cobra.Command{
 		cFail := config.GetString("cmdShortcuts.fail")
 		cArchive := config.GetString("cmdShortcuts.archive")
 
-		d := deck.LoadDeck(args[0])
+		d := deck.LoadDeck(args[0], randOrderFlag)
 
 		reader := bufio.NewReader(os.Stdin)
-
-		if randOrderFlag {
-			d.EnableRandom()
-		}
 
 		// kick it out of idle state
 		d.Exec(deck.CmdNext)

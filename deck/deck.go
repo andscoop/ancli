@@ -31,6 +31,7 @@ type Deck struct {
 	Cards              map[string]*Card // fetching of any card by fp key
 	state              State
 	keys               []string
+	quizzedKeys        []string
 	index              int
 	shouldQuiz         shouldQuizFunc
 	LastScoreSubmitted int64
@@ -39,7 +40,6 @@ type Deck struct {
 	LastIndexed        string
 	Name               string
 	RootDir            string
-	useRandomOrder     bool
 }
 
 // Decks on decks
@@ -63,13 +63,12 @@ type Card struct {
 }
 
 // LoadDeck will load a deck from a saved config
-func LoadDeck(name string) *Deck {
+func LoadDeck(name string, shouldShuffle bool) *Deck {
 	quizAlgo := config.GetString("defaultAlgo")
 
 	var d = Deck{
-		Name:           name,
-		QuizAlgo:       quizAlgo,
-		useRandomOrder: false,
+		Name:     name,
+		QuizAlgo: quizAlgo,
 	}
 
 	c := config.GetConfig()
@@ -80,6 +79,11 @@ func LoadDeck(name string) *Deck {
 	}
 
 	d.syncQuizzableCards()
+	if shouldShuffle {
+		rand.Shuffle(len(d.keys), func(i, j int) {
+			d.keys[i], d.keys[j] = d.keys[j], d.keys[i]
+		})
+	}
 
 	return &d
 }
@@ -87,18 +91,6 @@ func LoadDeck(name string) *Deck {
 // Save saves current deck back to index
 func (d *Deck) Save() {
 	config.SetAndSave("decks."+d.Name, d)
-}
-
-// EnableRandom will use a random card ordering
-// Public receiver for a private attr to avoid it being
-// written to the config
-func (d *Deck) EnableRandom() {
-	d.useRandomOrder = true
-}
-
-// ShouldRandom tells whether or not deck cards should be pulled in rand order
-func (d *Deck) ShouldRandom() bool {
-	return d.useRandomOrder
 }
 
 // shouldQuizFuncs are responsible for determining if a card is due
@@ -233,8 +225,6 @@ func (d *Deck) syncQuizzableCards() error {
 			d.keys = append(d.keys, k)
 		}
 	}
-
-	fmt.Printf("%v", d.keys)
 	return nil
 }
 
@@ -305,13 +295,6 @@ func (d *Deck) LastCard() {
 	if d.index < 0 {
 		d.index = len(d.Cards) - 1
 	}
-}
-
-// RandCard will return a random card from the deck.
-func (d *Deck) RandCard() {
-	v := rand.Intn(len(d.Cards) - 1)
-
-	d.index = v
 }
 
 // ArchiveCard will mark a card as archived so it won't be quizzed
