@@ -31,9 +31,9 @@ type Deck struct {
 	Cards              map[string]*Card // fetching of any card by fp key
 	state              State
 	keys               []string
-	quizzedKeys        []string
 	index              int
 	shouldQuiz         shouldQuizFunc
+	quizzedKeys        map[int]bool
 	LastScoreSubmitted int64
 	QuizAlgo           string
 	DeckRegex          string
@@ -71,8 +71,10 @@ func LoadDeck(name string, shouldShuffle bool) (*Deck, error) {
 	}
 
 	var d = Deck{
-		Name:     name,
-		QuizAlgo: quizAlgo,
+		Name:        name,
+		QuizAlgo:    quizAlgo,
+		index:       0,
+		quizzedKeys: make(map[int]bool),
 	}
 
 	c := config.GetConfig()
@@ -269,6 +271,9 @@ func (d *Deck) SubmitCardAnswer() error {
 		}
 	}
 
+	// track cards that are already quizzed for a session
+	d.quizzedKeys[d.index] = true
+
 	d.Save()
 
 	return nil
@@ -287,24 +292,44 @@ func (d *Deck) PullCard() (*Card, error) {
 	return c, nil
 }
 
-// NextCard shifts deck index up for later pulling
-func (d *Deck) NextCard() {
-	d.index = d.index + 1
-
-	// end of deck, go to beginning
-	if d.index >= len(d.Cards) {
-		d.index = 0
+// NextCard shifts the deck index forward or backwards
+// returns a bool if there are no more quizzable cards in deck
+func (d *Deck) NextCard(seek int) bool {
+	var offsetI int
+	directionShift := 1
+	if seek < 0 {
+		directionShift = -1
 	}
-}
 
-// LastCard shifts deck index down for later pulling
-func (d *Deck) LastCard() {
-	d.index = d.index - 1
+	offset := d.index + seek
 
-	// no more cards on top of deck, go to end
-	if d.index < 0 {
-		d.index = len(d.Cards) - 1
+	// loop at most all keys, starting from root,
+	// checking each key if it has been quizzed
+	for i := range d.keys {
+		offsetI = offset + (i * directionShift)
+		tm.Printf("offset: %d", offsetI)
+		// reached end of deck
+		if offsetI > len(d.keys)-1 {
+			// ensures next loop that offset = 0
+			offset = -1 - i
+			continue
+		}
+
+		// reached begginning of deck
+		if offsetI < 0 {
+			offset = len(d.keys) + i
+			continue
+		}
+
+		// found quizzable card
+		quizzed, ok := d.quizzedKeys[offsetI]
+		if !ok || !quizzed {
+			d.index = offsetI
+			return false
+		}
 	}
+
+	return true
 }
 
 // ArchiveCard will mark a card as archived so it won't be quizzed
@@ -321,11 +346,31 @@ func hashFp(fp string) string {
 }
 
 // ToScreen handles printing of deck quiz given current state
-func (d *Deck) ToScreen() error {
-	c, err := d.PullCard()
-	if err != nil {
-		return err
+func (d *Deck) toScreen() {
+	if d.state == RequestRestart {
+		d.printRestartRequestScreen()
+		return
 	}
+
+	d.printCardScreen()
+}
+
+func (d *Deck) resetQuizHistory() {
+	d.quizzedKeys = make(map[int]bool)
+}
+
+func (d *Deck) printRestartRequestScreen() {
+	screen := "End of deck reached, would you like to restart?\n\nyes (y) no (n)\n>"
+
+	tm.Clear()
+	tm.MoveCursor(1, 1)
+	tm.Println(screen)
+	tm.Flush()
+}
+
+func (d *Deck) printCardScreen() {
+	c, _ := d.PullCard()
+
 	screen := c.quiz.Question()
 
 	cNext := config.GetString("cmdShortcuts.next")
@@ -367,9 +412,6 @@ func (d *Deck) ToScreen() error {
 		"Path: %s\n", c.Fp,
 	)
 
-	tm.Print("> ")
-
+	tm.Print("\n> ")
 	tm.Flush()
-
-	return nil
 }
