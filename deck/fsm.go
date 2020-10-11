@@ -44,6 +44,12 @@ const (
 	CmdNo
 )
 
+// CmdScoreTupple allows for pairing commands with scores for certain algos
+type CmdScoreTupple struct {
+	Cmd   Cmd
+	Score int64
+}
+
 // CmdStateTupple tupple for state-command combination
 type CmdStateTupple struct {
 	Cmd   Cmd

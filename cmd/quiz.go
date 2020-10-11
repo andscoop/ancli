@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/andscoop/ancli/config"
@@ -28,11 +27,19 @@ var quizCmd = &cobra.Command{
 	Long:  `Starts a new quiz session where you can job your memory`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cNext := config.GetString("cmdShortcuts.next")
-		cBack := config.GetString("cmdShortcuts.back")
-		cPass := config.GetString("cmdShortcuts.pass")
-		cFail := config.GetString("cmdShortcuts.fail")
-		cArchive := config.GetString("cmdShortcuts.archive")
+		cmds := map[string]deck.CmdScoreTupple{
+			config.GetString("cmdShortcuts.next"):    {Cmd: deck.CmdNext, Score: 0},
+			config.GetString("cmdShortcuts.back"):    {Cmd: deck.CmdBack, Score: 0},
+			config.GetString("cmdShortcuts.archive"): {Cmd: deck.CmdArchive, Score: 0},
+			config.GetString("cmdShortcuts.pass"):    {Cmd: deck.CmdScore, Score: 1},
+			config.GetString("cmdShortcuts.fail"):    {Cmd: deck.CmdScore, Score: 0},
+			"0":                                      {Cmd: deck.CmdScore, Score: 0},
+			"1":                                      {Cmd: deck.CmdScore, Score: 1},
+			"2":                                      {Cmd: deck.CmdScore, Score: 2},
+			"3":                                      {Cmd: deck.CmdScore, Score: 3},
+			"4":                                      {Cmd: deck.CmdScore, Score: 4},
+			"5":                                      {Cmd: deck.CmdScore, Score: 5},
+		}
 
 		d, err := deck.LoadDeck(args[0], randOrderFlag)
 		if err != nil {
@@ -54,37 +61,14 @@ var quizCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
-
 			scrubbedInput := strings.Trim(rawInput, " \n")
 
-			switch scrubbedInput {
-			case cNext:
-				fsmCmd = deck.CmdNext
-			case cBack:
-				fsmCmd = deck.CmdBack
-			case cPass:
-				fsmCmd = deck.CmdScore
-				d.LastScoreSubmitted = 1
-			case cFail:
-				fsmCmd = deck.CmdScore
-				d.LastScoreSubmitted = 0
-			case cArchive:
-				fsmCmd = deck.CmdArchive
-			case "y":
-				fsmCmd = deck.CmdYes
-			case "n":
-				fsmCmd = deck.CmdNo
-			default:
-				// attempt to convert to int
-				value, err := strconv.ParseInt(scrubbedInput, 0, 64)
-				if err != nil {
-					fsmCmd = deck.CmdUnknown
-				} else {
-					fsmCmd = deck.CmdScore
-					d.LastScoreSubmitted = value
-				}
+			v, ok := cmds[scrubbedInput]
+			if !ok {
+				d.Exec(deck.CmdUnknown)
 			}
 
+			d.LastScoreSubmitted = v.Score
 			d.Exec(fsmCmd)
 		}
 	},
