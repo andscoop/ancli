@@ -53,6 +53,24 @@ type CmdStateTupple struct {
 // TransitionFunc transition function
 type TransitionFunc func(deck *Deck)
 
+// StateTransitionTable transition table
+var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
+	{CmdNext, Idle}:               cmdNextFromIdle,            // Transitions from Idle
+	{CmdNext, DisplayQuestion}:    cmdNextFromDisplayQuestion, // Transitions from DisplayQuestion
+	{CmdBack, DisplayQuestion}:    cmdBackFromDisplayQuestion,
+	{CmdArchive, DisplayQuestion}: archiveTranstitionFunc,
+	{CmdNext, DisplayAnswer}:      cmdNextFromDisplayAnswer, // Transitions from DisplayAnswer
+	{CmdBack, DisplayAnswer}:      cmdBackFromDisplayQuestion,
+	{CmdScore, DisplayAnswer}:     cmdScoreFromDisplayAnswer,
+	{CmdArchive, DisplayAnswer}:   archiveTranstitionFunc,
+	{CmdNext, ScoreAnswer}:        cmdNextFromScoreAnswer, // Transitions from ScoreAnswer
+	{CmdScore, ScoreAnswer}:       cmdScoreFromScoreAnswer,
+	{CmdBack, ScoreAnswer}:        cmdBackFromScoreAnswer,
+	{CmdArchive, ScoreAnswer}:     archiveTranstitionFunc, // Transitions from RequestRestart
+	{CmdYes, RequestRestart}:      cmdYesFromRequestRestart,
+	{CmdNo, RequestRestart}:       cmdNoFromRequestRestart,
+}
+
 // Exec will attempt to transition the state machine
 func (d *Deck) Exec(cmd Cmd) {
 	// get function from transition table
@@ -71,7 +89,7 @@ func (d *Deck) Exec(cmd Cmd) {
 }
 
 // ArchiveTranstitionFunc is a commonly repeated archive command
-func ArchiveTranstitionFunc(d *Deck) {
+func archiveTranstitionFunc(d *Deck) {
 	d.ArchiveCard()
 	deckEmpty := d.NextCard(1)
 	if deckEmpty {
@@ -81,66 +99,66 @@ func ArchiveTranstitionFunc(d *Deck) {
 	}
 }
 
-// StateTransitionTable transition table
-var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
-	// Transitions from Idle
-	{CmdNext, Idle}: func(d *Deck) {
+func cmdNextFromIdle(d *Deck) {
+	d.state = DisplayQuestion
+}
+
+func cmdNextFromDisplayQuestion(d *Deck) {
+	d.state = DisplayAnswer
+}
+
+func cmdNextFromDisplayAnswer(d *Deck) {
+	deckEmpty := d.NextCard(1)
+	if deckEmpty {
+		d.state = RequestRestart
+	} else {
 		d.state = DisplayQuestion
-	},
-	// Transitions from DisplayQuestion
-	{CmdNext, DisplayQuestion}: func(d *Deck) {
-		d.state = DisplayAnswer
-	},
-	{CmdBack, DisplayQuestion}: func(d *Deck) {
-		deckEmpty := d.NextCard(-1)
-		if deckEmpty {
-			d.state = RequestRestart
-		} else {
-			d.state = DisplayQuestion
-		}
-	},
-	{CmdArchive, DisplayQuestion}: ArchiveTranstitionFunc,
-	// Transitions from DisplayAnswer
-	{CmdNext, DisplayAnswer}: func(d *Deck) {
-		deckEmpty := d.NextCard(1)
-		if deckEmpty {
-			d.state = RequestRestart
-		} else {
-			d.state = DisplayQuestion
-		}
-	},
-	{CmdBack, DisplayAnswer}: func(d *Deck) {
+	}
+}
+
+func cmdNextFromScoreAnswer(d *Deck) {
+	deckEmpty := d.NextCard(0)
+	if deckEmpty {
+		d.state = RequestRestart
+	} else {
 		d.state = DisplayQuestion
-	},
-	{CmdScore, DisplayAnswer}: func(d *Deck) {
-		d.SubmitCardAnswer()
-		d.state = ScoreAnswer
-	},
-	{CmdArchive, DisplayAnswer}: ArchiveTranstitionFunc,
-	// Transitions from ScoreAnswer
-	{CmdNext, ScoreAnswer}: func(d *Deck) {
-		deckEmpty := d.NextCard(0)
-		if deckEmpty {
-			d.state = RequestRestart
-		} else {
-			d.state = DisplayQuestion
-		}
-	},
-	{CmdScore, ScoreAnswer}: func(d *Deck) {
-		d.SubmitCardAnswer()
-		d.state = ScoreAnswer
-	},
-	{CmdBack, ScoreAnswer}: func(d *Deck) {
-		d.state = DisplayAnswer
-	},
-	{CmdArchive, ScoreAnswer}: ArchiveTranstitionFunc,
-	// Transitions from RequestRestart
-	{CmdYes, RequestRestart}: func(d *Deck) {
-		d.resetQuizHistory()
-		d.NextCard(1)
+	}
+}
+
+func cmdBackFromDisplayQuestion(d *Deck) {
+	deckEmpty := d.NextCard(-1)
+	if deckEmpty {
+		d.state = RequestRestart
+	} else {
 		d.state = DisplayQuestion
-	},
-	{CmdNo, RequestRestart}: func(d *Deck) {
-		d.state = ExitProgram
-	},
+	}
+}
+
+func cmdBackFromDisplayAnswer(d *Deck) {
+	d.state = DisplayQuestion
+}
+
+func cmdBackFromScoreAnswer(d *Deck) {
+	d.state = DisplayAnswer
+
+}
+
+func cmdScoreFromDisplayAnswer(d *Deck) {
+	d.SubmitCardAnswer()
+	d.state = ScoreAnswer
+}
+
+func cmdScoreFromScoreAnswer(d *Deck) {
+	d.SubmitCardAnswer()
+	d.state = ScoreAnswer
+}
+
+func cmdYesFromRequestRestart(d *Deck) {
+	d.resetQuizHistory()
+	d.NextCard(1)
+	d.state = DisplayQuestion
+}
+
+func cmdNoFromRequestRestart(d *Deck) {
+	d.state = ExitProgram
 }
