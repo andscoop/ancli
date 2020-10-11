@@ -33,25 +33,26 @@ func TestNextCard(t *testing.T) {
 	var tests = []struct {
 		name          string
 		deck          *Deck
-		forward       bool
+		seek          int
 		wantIndex     int
 		wantEndOfDeck bool
 	}{
-		{"TestSimpleNextOne", &Deck{index: 0, keys: cardKeys}, true, 1, false},
-		{"TestSimpleLastOne", &Deck{index: 1, keys: cardKeys}, false, 0, false},
-		{"TestNextCardAnswered", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{1: true}}, true, 2, false},
-		{"TestLastCardAnswered", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{1: true}}, false, 0, false},
-		{"TestNextTwoAnswered", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{1: true, 2: true}}, true, 3, false},
-		{"TestLastTwoAnswered", &Deck{index: 2, keys: cardKeys, quizzedKeys: map[int]bool{1: true, 2: true}}, false, 0, false},
-		{"TestSimpleEndOfDeckForward", &Deck{index: 2, keys: cardKeys, quizzedKeys: map[int]bool{0: true, 1: true, 2: true, 3: true, 4: true}}, true, 2, true},
-		{"TestSimpleEndOfDeckBackward", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{0: true, 1: true, 2: true, 3: true, 4: true}}, false, 1, true},
-		{"TestLoopToTopOfDeck", &Deck{index: 4, keys: cardKeys, quizzedKeys: map[int]bool{4: true}}, true, 0, false},
-		{"TestLoopToBottomOfDeck", &Deck{index: 0, keys: cardKeys, quizzedKeys: map[int]bool{0: true}}, false, 4, false},
+		{"TestGetCurrentCard", &Deck{index: 0, keys: cardKeys}, 0, 0, false},
+		{"TestSimpleNextOne", &Deck{index: 0, keys: cardKeys}, 1, 1, false},
+		{"TestSimpleLastOne", &Deck{index: 1, keys: cardKeys}, -1, 0, false},
+		{"TestNextCardAnswered", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{1: true}}, 1, 2, false},
+		{"TestLastCardAnswered", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{1: true}}, -1, 0, false},
+		{"TestNextTwoAnswered", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{1: true, 2: true}}, 1, 3, false},
+		{"TestLastTwoAnswered", &Deck{index: 2, keys: cardKeys, quizzedKeys: map[int]bool{1: true, 2: true}}, -1, 0, false},
+		{"TestSimpleEndOfDeckForward", &Deck{index: 2, keys: cardKeys, quizzedKeys: map[int]bool{0: true, 1: true, 2: true, 3: true, 4: true}}, 1, 2, true},
+		{"TestSimpleEndOfDeckBackward", &Deck{index: 1, keys: cardKeys, quizzedKeys: map[int]bool{0: true, 1: true, 2: true, 3: true, 4: true}}, -1, 1, true},
+		{"TestLoopToTopOfDeck", &Deck{index: 4, keys: cardKeys, quizzedKeys: map[int]bool{4: true}}, 1, 0, false},
+		{"TestLoopToBottomOfDeck", &Deck{index: 0, keys: cardKeys, quizzedKeys: map[int]bool{0: true}}, -1, 4, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			haveEndOfDeck := tt.deck.NextCard(tt.forward)
+			haveEndOfDeck := tt.deck.NextCard(tt.seek)
 			haveIndex := tt.deck.index
 
 			if haveIndex != tt.wantIndex {

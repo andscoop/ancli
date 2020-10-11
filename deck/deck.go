@@ -31,9 +31,9 @@ type Deck struct {
 	Cards              map[string]*Card // fetching of any card by fp key
 	state              State
 	keys               []string
-	quizzedKeys        map[int]bool
 	index              int
 	shouldQuiz         shouldQuizFunc
+	quizzedKeys        map[int]bool
 	LastScoreSubmitted int64
 	QuizAlgo           string
 	DeckRegex          string
@@ -294,21 +294,20 @@ func (d *Deck) PullCard() (*Card, error) {
 
 // NextCard shifts the deck index forward or backwards
 // returns a bool if there are no more quizzable cards in deck
-func (d *Deck) NextCard(forward bool) bool {
+func (d *Deck) NextCard(seek int) bool {
 	var offsetI int
 	directionShift := 1
-
-	if !forward {
+	if seek < 0 {
 		directionShift = -1
 	}
 
-	offset := d.index + directionShift
+	offset := d.index + seek
 
 	// loop at most all keys, starting from root,
 	// checking each key if it has been quizzed
 	for i := range d.keys {
 		offsetI = offset + (i * directionShift)
-
+		tm.Printf("offset: %d", offsetI)
 		// reached end of deck
 		if offsetI > len(d.keys)-1 {
 			// ensures next loop that offset = 0
@@ -354,6 +353,10 @@ func (d *Deck) toScreen() {
 	}
 
 	d.printCardScreen()
+}
+
+func (d *Deck) resetQuizHistory() {
+	d.quizzedKeys = make(map[int]bool)
 }
 
 func (d *Deck) printRestartRequestScreen() {
@@ -409,9 +412,6 @@ func (d *Deck) printCardScreen() {
 		"Path: %s\n", c.Fp,
 	)
 
-	tm.Printf("\ndeck: %v", d.keys)
-	tm.Printf("\ncards: %v", d.Cards)
-	tm.Printf("\nindex: %d", d.index)
 	tm.Print("\n> ")
 	tm.Flush()
 }

@@ -73,11 +73,12 @@ func (d *Deck) Exec(cmd Cmd) {
 // ArchiveTranstitionFunc is a commonly repeated archive command
 func ArchiveTranstitionFunc(d *Deck) {
 	d.ArchiveCard()
-	deckEmpty := d.NextCard(true)
+	deckEmpty := d.NextCard(1)
 	if deckEmpty {
 		d.state = RequestRestart
+	} else {
+		d.state = DisplayQuestion
 	}
-	d.state = DisplayQuestion
 }
 
 // StateTransitionTable transition table
@@ -88,26 +89,25 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	},
 	// Transitions from DisplayQuestion
 	{CmdNext, DisplayQuestion}: func(d *Deck) {
-		d.PullCard()
 		d.state = DisplayAnswer
 	},
 	{CmdBack, DisplayQuestion}: func(d *Deck) {
-		deckEmpty := d.NextCard(false)
+		deckEmpty := d.NextCard(-1)
 		if deckEmpty {
 			d.state = RequestRestart
+		} else {
+			d.state = DisplayQuestion
 		}
-
-		d.state = DisplayQuestion
 	},
 	{CmdArchive, DisplayQuestion}: ArchiveTranstitionFunc,
 	// Transitions from DisplayAnswer
 	{CmdNext, DisplayAnswer}: func(d *Deck) {
-		deckEmpty := d.NextCard(true)
+		deckEmpty := d.NextCard(1)
 		if deckEmpty {
 			d.state = RequestRestart
+		} else {
+			d.state = DisplayQuestion
 		}
-
-		d.state = DisplayQuestion
 	},
 	{CmdBack, DisplayAnswer}: func(d *Deck) {
 		d.state = DisplayQuestion
@@ -119,32 +119,25 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	{CmdArchive, DisplayAnswer}: ArchiveTranstitionFunc,
 	// Transitions from ScoreAnswer
 	{CmdNext, ScoreAnswer}: func(d *Deck) {
-		deckEmpty := d.NextCard(true)
+		deckEmpty := d.NextCard(0)
 		if deckEmpty {
 			d.state = RequestRestart
+		} else {
+			d.state = DisplayQuestion
 		}
-
-		d.state = DisplayQuestion
 	},
 	{CmdScore, ScoreAnswer}: func(d *Deck) {
 		d.SubmitCardAnswer()
 		d.state = ScoreAnswer
 	},
 	{CmdBack, ScoreAnswer}: func(d *Deck) {
-		deckEmpty := d.NextCard(false)
-		if deckEmpty {
-			d.state = RequestRestart
-		}
-		d.state = DisplayQuestion
+		d.state = DisplayAnswer
 	},
 	{CmdArchive, ScoreAnswer}: ArchiveTranstitionFunc,
 	// Transitions from RequestRestart
 	{CmdYes, RequestRestart}: func(d *Deck) {
-		d.quizzedKeys = make(map[int]bool)
-		deckEmpty := d.NextCard(true)
-		if deckEmpty {
-			d.state = RequestRestart
-		}
+		d.resetQuizHistory()
+		d.NextCard(1)
 		d.state = DisplayQuestion
 	},
 	{CmdNo, RequestRestart}: func(d *Deck) {

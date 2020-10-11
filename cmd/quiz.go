@@ -70,6 +70,10 @@ var quizCmd = &cobra.Command{
 				d.LastScoreSubmitted = 0
 			case cArchive:
 				fsmCmd = deck.CmdArchive
+			case "y":
+				fsmCmd = deck.CmdYes
+			case "n":
+				fsmCmd = deck.CmdNo
 			default:
 				// attempt to convert to int
 				value, err := strconv.ParseInt(scrubbedInput, 0, 64)
