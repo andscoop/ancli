@@ -2,6 +2,7 @@ package deck
 
 import (
 	"fmt"
+	"os"
 )
 
 // State type for readability of state machine
@@ -16,6 +17,11 @@ const (
 	DisplayAnswer
 	// ScoreAnswer updates score factors and tells user quizoutcome
 	ScoreAnswer
+	// RequestRestart indicates a user has reached of deck,
+	// notifies them, and checks if they want to restart
+	RequestRestart
+	// ExitProgram is a quitter
+	ExitProgram
 )
 
 // Cmd type for readability of state machine
@@ -32,6 +38,10 @@ const (
 	CmdArchive
 	// CmdUnknown is a catchup and should throw an error
 	CmdUnknown
+	// CmdYes signals an affirmative
+	CmdYes
+	//CmdNo signals a negative ghostrider
+	CmdNo
 )
 
 // CmdStateTupple tupple for state-command combination
@@ -51,14 +61,22 @@ func (d *Deck) Exec(cmd Cmd) {
 		fmt.Println("unknown command, try again please")
 	} else {
 		f(d)
-		d.ToScreen()
+
+		if d.state == ExitProgram {
+			os.Exit(0)
+		}
+
+		d.toScreen()
 	}
 }
 
 // ArchiveTranstitionFunc is a commonly repeated archive command
 func ArchiveTranstitionFunc(d *Deck) {
 	d.ArchiveCard()
-	d.NextCard()
+	deckEmpty := d.NextCard(true)
+	if deckEmpty {
+		d.state = RequestRestart
+	}
 	d.state = DisplayQuestion
 }
 
@@ -66,7 +84,6 @@ func ArchiveTranstitionFunc(d *Deck) {
 var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	// Transitions from Idle
 	{CmdNext, Idle}: func(d *Deck) {
-		d.NextCard()
 		d.state = DisplayQuestion
 	},
 	// Transitions from DisplayQuestion
@@ -75,13 +92,21 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		d.state = DisplayAnswer
 	},
 	{CmdBack, DisplayQuestion}: func(d *Deck) {
-		d.LastCard()
+		deckEmpty := d.NextCard(false)
+		if deckEmpty {
+			d.state = RequestRestart
+		}
+
 		d.state = DisplayQuestion
 	},
 	{CmdArchive, DisplayQuestion}: ArchiveTranstitionFunc,
 	// Transitions from DisplayAnswer
 	{CmdNext, DisplayAnswer}: func(d *Deck) {
-		d.NextCard()
+		deckEmpty := d.NextCard(true)
+		if deckEmpty {
+			d.state = RequestRestart
+		}
+
 		d.state = DisplayQuestion
 	},
 	{CmdBack, DisplayAnswer}: func(d *Deck) {
@@ -94,7 +119,11 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 	{CmdArchive, DisplayAnswer}: ArchiveTranstitionFunc,
 	// Transitions from ScoreAnswer
 	{CmdNext, ScoreAnswer}: func(d *Deck) {
-		d.NextCard()
+		deckEmpty := d.NextCard(true)
+		if deckEmpty {
+			d.state = RequestRestart
+		}
+
 		d.state = DisplayQuestion
 	},
 	{CmdScore, ScoreAnswer}: func(d *Deck) {
@@ -102,8 +131,23 @@ var StateTransitionTable = map[CmdStateTupple]TransitionFunc{
 		d.state = ScoreAnswer
 	},
 	{CmdBack, ScoreAnswer}: func(d *Deck) {
-		d.LastCard()
+		deckEmpty := d.NextCard(false)
+		if deckEmpty {
+			d.state = RequestRestart
+		}
 		d.state = DisplayQuestion
 	},
 	{CmdArchive, ScoreAnswer}: ArchiveTranstitionFunc,
+	// Transitions from RequestRestart
+	{CmdYes, RequestRestart}: func(d *Deck) {
+		d.quizzedKeys = make(map[int]bool)
+		deckEmpty := d.NextCard(true)
+		if deckEmpty {
+			d.state = RequestRestart
+		}
+		d.state = DisplayQuestion
+	},
+	{CmdNo, RequestRestart}: func(d *Deck) {
+		d.state = ExitProgram
+	},
 }
