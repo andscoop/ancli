@@ -292,6 +292,18 @@ func (d *Deck) PullCard() (*Card, error) {
 	return c, nil
 }
 
+func (d *Deck) quizzableCardsRemaining() int {
+	c := 0
+	for i := range d.keys {
+		// found quizzable card
+		quizzed, ok := d.quizzedKeys[i]
+		if !ok || !quizzed {
+			c++
+		}
+	}
+	return c
+}
+
 // NextCard shifts the deck index forward or backwards
 // returns a bool if there are no more quizzable cards in deck
 func (d *Deck) NextCard(seek int) bool {
@@ -307,7 +319,6 @@ func (d *Deck) NextCard(seek int) bool {
 	// checking each key if it has been quizzed
 	for i := range d.keys {
 		offsetI = offset + (i * directionShift)
-		tm.Printf("offset: %d", offsetI)
 		// reached end of deck
 		if offsetI > len(d.keys)-1 {
 			// ensures next loop that offset = 0
@@ -401,17 +412,16 @@ func (d *Deck) printCardScreen() {
 	tm.MoveCursor(1, 1)
 
 	screen = screen + "\n" + string(d.LastScoreSubmitted)
-	tm.Println(screen)
+	tm.Print(screen)
+	tm.MoveCursor(1, 30)
+	screen = "======================="
+	screen = screen + fmt.Sprintf("\nnext (%s)  back (%s)  pass (%s)  fail (%s)  archive (%s)\n",
+		cNext, cBack, cPass, cFail, cArchive)
+	screen = screen + "======================="
+	screen = screen + fmt.Sprintf("\nPath: %s\n", c.Fp)
+	screen = screen + fmt.Sprintf("\nCards Remaining: %d", d.quizzableCardsRemaining())
 
-	tm.Printf(
-		"\n\nnext (%s)  back (%s)  pass (%s)  fail (%s)  archive (%s)\n",
-		cNext, cBack, cPass, cFail, cArchive,
-	)
-
-	tm.Printf(
-		"Path: %s\n", c.Fp,
-	)
-
+	tm.Print(screen)
 	tm.Print("\n> ")
 	tm.Flush()
 }

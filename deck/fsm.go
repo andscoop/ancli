@@ -94,7 +94,6 @@ func (d *Deck) Exec(cmd Cmd) {
 	}
 }
 
-// ArchiveTranstitionFunc is a commonly repeated archive command
 func archiveTranstitionFunc(d *Deck) {
 	d.ArchiveCard()
 	deckEmpty := d.NextCard(1)
