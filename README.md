@@ -57,6 +57,6 @@ A rubber band
 Similarly, the inline style can be used for answers that fall inline with the question. The answer part of the card will be overwritten with `_`'s during a quiz.
 
 ```
-The ~trunk~ is where an elephant stores its suitcase.
+The ~~trunk~~ is where an elephant stores its suitcase.
 #ancli-jokes
 ```
