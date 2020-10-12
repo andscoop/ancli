@@ -15,7 +15,7 @@ const (
 	DisplayQuestion
 	// DisplayAnswer until user commands otherwise
 	DisplayAnswer
-	// ScoreAnswer updates score factors and tells user quizoutcome
+	// ScoreAnswer updates score factors and tells user quiz outcome
 	ScoreAnswer
 	// RequestRestart indicates a user has reached of deck,
 	// notifies them, and checks if they want to restart

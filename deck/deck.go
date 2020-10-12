@@ -400,7 +400,12 @@ func (d *Deck) printCardScreen() {
 			screen = screen + "\n\n" + answer
 		}
 	case ScoreAnswer:
-		screen = screen + "\n\n" + answer
+		if c.quiz.Type == quiz.Inline {
+			screen = answer
+		} else {
+			screen = screen + "\n\n" + answer
+		}
+
 		if d.LastScoreSubmitted == 0 {
 			screen = screen + "\n\n" + failOutput
 		} else {

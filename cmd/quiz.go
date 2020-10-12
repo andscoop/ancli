@@ -31,6 +31,8 @@ var quizCmd = &cobra.Command{
 			config.GetString("cmdShortcuts.next"):    {Cmd: deck.CmdNext, Score: 0},
 			config.GetString("cmdShortcuts.back"):    {Cmd: deck.CmdBack, Score: 0},
 			config.GetString("cmdShortcuts.archive"): {Cmd: deck.CmdArchive, Score: 0},
+			"y":                                      {Cmd: deck.CmdYes, Score: 0},
+			"n":                                      {Cmd: deck.CmdNo, Score: 0},
 			config.GetString("cmdShortcuts.pass"):    {Cmd: deck.CmdScore, Score: 1},
 			config.GetString("cmdShortcuts.fail"):    {Cmd: deck.CmdScore, Score: 0},
 			"0":                                      {Cmd: deck.CmdScore, Score: 0},
@@ -54,9 +56,6 @@ var quizCmd = &cobra.Command{
 		d.Exec(deck.CmdNext)
 
 		for {
-			var fsmCmd deck.Cmd
-
-			// read command from stdin
 			rawInput, err := reader.ReadString('\n')
 			if err != nil {
 				log.Fatalln(err)
@@ -69,7 +68,7 @@ var quizCmd = &cobra.Command{
 			}
 
 			d.LastScoreSubmitted = v.Score
-			d.Exec(fsmCmd)
+			d.Exec(v.Cmd)
 		}
 	},
 }
